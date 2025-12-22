@@ -3,9 +3,12 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Christmas Tree — Ultra FX (Fixed)</title>
+  <title>Christmas Tree — Ultra FX</title>
   <style>
-    :root{ --bg1:#050814; --bg2:#0a1436; --fg:#eaf2ff; --gold:#ffef9a; --glow:#7df9ff; }
+    :root{
+      --bg1:#050814; --bg2:#0a1436; --fg:#eaf2ff;
+      --gold:#ffef9a; --glow:#7df9ff;
+    }
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;overflow:hidden;background:var(--bg1);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
     canvas{position:fixed;inset:0;display:block}
@@ -24,8 +27,29 @@
       backdrop-filter: blur(10px);
     }
 
+    /* Corner icons */
+    .corner{
+      position:fixed; top:14px; right:14px; z-index:30;
+      display:flex; gap:10px; align-items:center;
+    }
+    .ico{
+      width:40px; height:40px; border-radius:999px;
+      display:grid; place-items:center;
+      cursor:pointer; user-select:none;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.16);
+      color:rgba(234,242,255,.95);
+      backdrop-filter: blur(10px);
+      box-shadow:0 18px 40px rgba(0,0,0,.35);
+      font-size:18px; font-weight:900;
+      transition:transform .12s ease, filter .12s ease;
+    }
+    .ico:hover{ transform:scale(1.08); filter:drop-shadow(0 0 14px rgba(255,239,154,.25)); }
+    .ico.on{ background:rgba(255,239,154,.90); color:#10162b; border-color:rgba(255,239,154,.65); }
+
+    /* Debug panel */
     .panel{
-      position:fixed; left:12px; bottom:12px; z-index:70;
+      position:fixed; left:12px; bottom:12px; z-index:40;
       width:min(560px, 92vw);
       padding:10px 12px;
       border-radius:14px;
@@ -37,48 +61,13 @@
       font-size:13px;
       display:none;
       white-space:pre-line;
+      max-height:40vh;
+      overflow:auto;
     }
     .panel.show{display:block}
 
-    .gate{
-      position:fixed; inset:0; z-index:60;
-      display:grid; place-items:center;
-      background:radial-gradient(circle at 50% 40%, rgba(125,249,255,.12), rgba(0,0,0,.62));
-      backdrop-filter: blur(6px);
-    }
-    .card{
-      width:min(640px, 94vw);
-      border-radius:18px;
-      padding:16px;
-      background:rgba(255,255,255,.09);
-      border:1px solid rgba(255,255,255,.16);
-      box-shadow:0 40px 120px rgba(0,0,0,.65);
-      color:rgba(234,242,255,.96);
-    }
-    .card h2{margin:0 0 6px 0;font-size:18px}
-    .card p{margin:0 0 14px 0;opacity:.92;line-height:1.35}
-    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
-    .btn{
-      border:none; cursor:pointer;
-      padding:12px 14px;
-      border-radius:999px;
-      background:rgba(255,239,154,.94);
-      color:#10162b;
-      font-weight:950;
-      box-shadow:0 18px 40px rgba(0,0,0,.35);
-    }
-    .btn2{
-      border:none; cursor:pointer;
-      padding:10px 12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.10);
-      border:1px solid rgba(255,255,255,.16);
-      color:rgba(234,242,255,.95);
-      font-weight:900;
-    }
-    .small{opacity:.85;font-size:12px}
-
-    .hotspots{position:fixed; inset:0; z-index:40; pointer-events:auto}
+    /* Gifts hotspots */
+    .hotspots{position:fixed; inset:0; z-index:20; pointer-events:auto}
     .giftHotspot{
       position:absolute; width:56px; height:56px;
       transform:translate(-50%,-50%);
@@ -95,8 +84,9 @@
     .giftHotspot:hover{ transform:translate(-50%,-50%) scale(1.08); filter: drop-shadow(0 0 18px rgba(255,239,154,.30)); opacity:1; }
     .giftHotspot svg{width:34px;height:34px}
 
+    /* Lightbox */
     .lightbox{
-      position:fixed; inset:0; z-index:80;
+      position:fixed; inset:0; z-index:60;
       display:none; place-items:center;
       background:rgba(0,0,0,.58);
       backdrop-filter: blur(7px);
@@ -126,7 +116,7 @@
     }
     .cap small{display:block; font-weight:700; opacity:.8; margin-top:3px}
 
-    .controls{position:fixed; inset:0; z-index:81; pointer-events:none; display:none;}
+    .controls{position:fixed; inset:0; z-index:61; pointer-events:none; display:none;}
     .controls.show{display:block}
     .ctl{
       pointer-events:auto; position:fixed;
@@ -148,27 +138,16 @@
   <canvas id="c"></canvas>
   <div class="top"><span>MERRY CHRISTMAS</span></div>
 
-  <!-- ✅ must exist -->
+  <!-- ✅ Dùng đúng tên file sau khi bạn rename -->
   <audio id="bgm" src="assets/Last-Christmas.mp3" autoplay loop playsinline preload="auto"></audio>
 
-  <div class="panel" id="panel"></div>
-
-  <!-- Gate luôn hiện trước (trong khi kiểm tra), sau đó tự ẩn -->
-  <div class="gate" id="gate">
-    <div class="card">
-      <h2>🎄 Christmas Tree Ultra FX</h2>
-      <p id="gateMsg">Đang tải hiệu ứng…</p>
-      <div class="row">
-        <button class="btn" id="enableAudio">BẬT NHẠC</button>
-        <button class="btn2" id="toggleDebug">Debug</button>
-        <button class="btn2" id="enter">VÀO TRANG</button>
-      </div>
-      <div class="small" id="hint">
-        Nếu nhạc không phát: hãy chắc file <b>assets/Last-Christmas.mp3</b> tồn tại đúng tên (GitHub Pages phân biệt hoa/thường).
-      </div>
-    </div>
+  <div class="corner">
+    <div class="ico" id="icoAudio" title="Bật/Tắt nhạc">🔊</div>
+    <div class="ico" id="icoTheme" title="Đổi màu theme">🎨</div>
+    <div class="ico" id="icoDebug" title="Debug">🐞</div>
   </div>
 
+  <div class="panel" id="panel"></div>
   <div class="hotspots" id="hotspots"></div>
 
   <div class="lightbox" id="lightbox" aria-hidden="true">
@@ -193,15 +172,93 @@
 <script>
 (() => {
   // ================================
-  // CONFIG: sửa ảnh ở đây
+  // 0) DEBUG
+  // ================================
+  const panel = document.getElementById('panel');
+  const icoDebug = document.getElementById('icoDebug');
+  let debug=false;
+  function log(msg){
+    if(!debug) return;
+    panel.classList.add('show');
+    panel.textContent = msg + "\n\n" + panel.textContent;
+  }
+  icoDebug.addEventListener('click', ()=>{
+    debug=!debug;
+    panel.classList.toggle('show', debug);
+    icoDebug.classList.toggle('on', debug);
+    log("Debug ON");
+  });
+  window.addEventListener('error', (e)=>{
+    debug=true; panel.classList.add('show'); icoDebug.classList.add('on');
+    panel.textContent = "JS ERROR:\n" + (e.message||"unknown") + "\n" + (e.filename||"") + ":" + (e.lineno||"") + "\n\n" + panel.textContent;
+  });
+
+  // ================================
+  // 1) THEME switch
+  // ================================
+  const palettes = [
+    {bg1:'#050814', bg2:'#0a1436', cols:['#ffef9a','#ffd166','#ff9f1c','#ff4d6d','#b388ff','#7df9ff','#a7ff83','#ffffff']},
+    {bg1:'#02030a', bg2:'#071b2a', cols:['#ffffff','#00d1ff','#00ff87','#ffe66d','#c77dff','#ff4d6d','#7df9ff']},
+    {bg1:'#050814', bg2:'#1a0a2a', cols:['#ff9bd3','#7df9ff','#ffd166','#ffffff','#4cc9f0','#b388ff']}
+  ];
+  let palIndex=0;
+  const icoTheme = document.getElementById('icoTheme');
+  icoTheme.addEventListener('click', ()=>{
+    palIndex = (palIndex+1) % palettes.length;
+    initTree();
+    initOrbitSparkles();
+    log("Theme -> " + palIndex);
+  });
+
+  // ================================
+  // 2) AUDIO toggle (no gate)
+  // ================================
+  const bgm = document.getElementById('bgm');
+  const icoAudio = document.getElementById('icoAudio');
+
+  async function tryPlay(){
+    try{
+      bgm.volume = 0.75;
+      await bgm.play();
+      icoAudio.classList.add('on');
+      log("Audio playing");
+      return true;
+    }catch(e){
+      icoAudio.classList.remove('on');
+      log("Autoplay blocked. Click 🔊 to enable.");
+      return false;
+    }
+  }
+  // preload check file exists
+  fetch("assets/Last-Christmas.mp3", {method:"HEAD", cache:"no-store"})
+    .then(r=>{ if(!r.ok) throw new Error("HTTP "+r.status); log("Audio exists OK"); })
+    .catch(err=>{ debug=true; panel.classList.add('show'); icoDebug.classList.add('on');
+      panel.textContent = "AUDIO MISSING:\nKhông tìm thấy assets/Last-Christmas.mp3\nHãy rename file trong assets cho đúng.\n\n" + panel.textContent;
+    });
+
+  icoAudio.addEventListener('click', async ()=>{
+    if(!bgm.paused){
+      bgm.pause();
+      icoAudio.classList.remove('on');
+      return;
+    }
+    await tryPlay();
+  });
+
+  // thử autoplay khi vào trang
+  tryPlay();
+  // click bất kỳ cũng thử (để vượt autoplay policy)
+  window.addEventListener('pointerdown', ()=>{ if(bgm.paused) bgm.play().then(()=>icoAudio.classList.add('on')).catch(()=>{}); }, {passive:true});
+
+  // ================================
+  // 3) GIFTS: dùng ảnh bạn đã upload
   // ================================
   const GIFT_ALBUMS = {
-    gift1: { title:"Hộp quà số 1", images:["assets/img1.jpg","assets/img2.jpg","assets/img3.jpg"] },
-    gift2: { title:"Hộp quà số 2", images:["assets/img4.jpg","assets/img5.jpg"] },
-    gift3: { title:"Hộp quà số 3", images:["assets/img6.jpg"] }
+    gift1: { title:"Hộp quà số 1", images:["assets/anh.png","assets/hihi.png"] },
+    gift2: { title:"Hộp quà số 2", images:["assets/hihi.png"] },
+    gift3: { title:"Hộp quà số 3", images:["assets/anh.png"] }
   };
 
-  // Placeholder nếu thiếu ảnh
   const PLACEHOLDER = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
     <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800">
       <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
@@ -209,103 +266,26 @@
       </linearGradient></defs>
       <rect width="100%" height="100%" fill="url(#bg)"/>
       <text x="60" y="120" fill="#eaf2ff" font-family="Verdana" font-size="54" font-weight="900">Ảnh chưa có</text>
-      <text x="60" y="180" fill="#ffef9a" font-family="Verdana" font-size="28" opacity=".92">Thêm ảnh vào assets/ rồi sửa GIFT_ALBUMS</text>
+      <text x="60" y="180" fill="#ffef9a" font-family="Verdana" font-size="28" opacity=".92">Kiểm tra lại đường dẫn assets/...</text>
       <text x="60" y="240" fill="#7df9ff" font-family="Verdana" font-size="26" opacity=".90">Merry Christmas ✨</text>
     </svg>
   `);
 
   // ================================
-  // UI
-  // ================================
-  const gate = document.getElementById('gate');
-  const gateMsg = document.getElementById('gateMsg');
-  const panel = document.getElementById('panel');
-  const toggleDebug = document.getElementById('toggleDebug');
-  const enableAudio = document.getElementById('enableAudio');
-  const enterBtn = document.getElementById('enter');
-
-  let debug = false;
-  function log(msg){
-    if(!debug) return;
-    panel.classList.add('show');
-    panel.textContent = msg + "\n\n" + panel.textContent;
-  }
-  toggleDebug.addEventListener('click', () => {
-    debug = !debug;
-    panel.classList.toggle('show', debug);
-    log("Debug ON");
-  });
-
-  // chống lỗi JS làm “cây không hiện”
-  window.addEventListener('error', (e) => {
-    debug = true;
-    panel.classList.add('show');
-    panel.textContent = "JS ERROR:\n" + (e.message||"unknown") + "\n" + (e.filename||"") + ":" + (e.lineno||"") + "\n\n" + panel.textContent;
-    gateMsg.textContent = "Có lỗi JS. Bật Debug để xem chi tiết.";
-  });
-
-  // ================================
-  // AUDIO: kiểm tra file + autoplay
-  // ================================
-  const bgm = document.getElementById('bgm');
-
-  async function checkAudioExists(){
-    try{
-      const res = await fetch("assets/Last-Christmas.mp3", { method:"HEAD", cache:"no-store" });
-      if(!res.ok) throw new Error("HTTP " + res.status);
-      log("Audio exists: OK");
-      return true;
-    }catch(err){
-      log("Audio missing: " + err);
-      gateMsg.textContent = "Không tìm thấy nhạc: assets/Last-Christmas.mp3 (sai tên hoặc sai thư mục).";
-      return false;
-    }
-  }
-
-  async function tryPlay(){
-    try{
-      bgm.volume = 0.75;
-      await bgm.play();
-      log("Audio autoplay OK");
-      return true;
-    }catch(e){
-      log("Autoplay blocked: need click");
-      gateMsg.textContent = "Nhạc bị chặn autoplay. Nhấn BẬT NHẠC 1 lần để chạy loop.";
-      return false;
-    }
-  }
-
-  enableAudio.addEventListener('click', async () => {
-    try{
-      bgm.volume = 0.75;
-      await bgm.play();
-      gateMsg.textContent = "Nhạc đang chạy ✅";
-      log("Audio enabled by click");
-    }catch(e){
-      gateMsg.textContent = "Không phát được nhạc (mở Debug để xem lỗi).";
-      log("Audio play error: " + (e?.message || e));
-    }
-  });
-
-  // Cho phép vào trang dù nhạc bị chặn
-  function hideGate(){ gate.style.display = "none"; }
-  enterBtn.addEventListener('click', hideGate);
-
-  // click bất kỳ cũng thử bật nhạc (nếu đang pause)
-  window.addEventListener('pointerdown', () => { if(bgm.paused) bgm.play().catch(()=>{}); }, {passive:true});
-
-  // ================================
-  // CANVAS RENDER (Ultra FX)
+  // 4) CANVAS (ultra fx)
   // ================================
   const canvas = document.getElementById('c');
   const ctx = canvas.getContext('2d', { alpha:false });
 
   let W=0,H=0,DPR=1;
+  const rand=(a,b)=>Math.random()*(b-a)+a;
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
   function resize(){
-    DPR = Math.min(2, window.devicePixelRatio || 1);
-    canvas.width  = Math.floor(innerWidth * DPR);
+    DPR = Math.min(2, devicePixelRatio || 1);
+    canvas.width = Math.floor(innerWidth * DPR);
     canvas.height = Math.floor(innerHeight * DPR);
-    canvas.style.width  = innerWidth + 'px';
+    canvas.style.width = innerWidth + 'px';
     canvas.style.height = innerHeight + 'px';
     ctx.setTransform(DPR,0,0,DPR,0,0);
     W = innerWidth; H = innerHeight;
@@ -314,18 +294,7 @@
   addEventListener('resize', resize, {passive:true});
   resize();
 
-  const rand=(a,b)=>Math.random()*(b-a)+a;
-  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-
-  const palettes = [
-    {bg1:'#050814', bg2:'#0a1436', cols:['#ffef9a','#ffd166','#ff9f1c','#ff4d6d','#b388ff','#7df9ff','#a7ff83','#ffffff']},
-    {bg1:'#02030a', bg2:'#071b2a', cols:['#ffffff','#00d1ff','#00ff87','#ffe66d','#c77dff','#ff4d6d','#7df9ff']},
-    {bg1:'#050814', bg2:'#1a0a2a', cols:['#ff9bd3','#7df9ff','#ffd166','#ffffff','#4cc9f0','#b388ff']}
-  ];
-  let palIndex = 0;
-
-  // snow
-  const snow=[];
+  const snow=[], fireflies=[], bursts=[];
   function initSnow(){
     snow.length=0;
     const n = Math.min(420, Math.floor(W/2.2));
@@ -333,9 +302,6 @@
       snow.push({x:rand(0,W), y:rand(0,H), r:rand(0.7,3.0), v:rand(0.8,3.2), s:rand(-0.9,0.9), w:rand(0,Math.PI*2), a:rand(0.50,0.96)});
     }
   }
-
-  // fireflies
-  const fireflies=[];
   function initFireflies(){
     fireflies.length=0;
     const n = Math.min(130, Math.floor(W/11));
@@ -343,30 +309,23 @@
       fireflies.push({ x:rand(W*0.18,W*0.82), y:rand(H*0.12,H*0.88), r:rand(0.8,2.6), vx:rand(-0.32,0.32), vy:rand(-0.32,0.32), phase:rand(0,Math.PI*2) });
     }
   }
-
-  // burst
-  const bursts=[];
   function spawnBurst(x,y,cols){
-    for(let i=0;i<300;i++){
+    for(let i=0;i<280;i++){
       bursts.push({x,y,vx:rand(-3.6,3.6),vy:rand(-3.6,3.6),life:rand(28,105),r:rand(1.0,4.0),c:cols[i%cols.length]});
     }
   }
 
-  // 3D projection
   function project(x,y,z, rotY, rotX){
     const cy=Math.cos(rotY), sy=Math.sin(rotY);
     let xx = x*cy + z*sy;
     let zz = -x*sy + z*cy;
-
     const cx=Math.cos(rotX), sx=Math.sin(rotX);
     let yy = y*cx - zz*sx;
     zz = y*sx + zz*cx;
-
     const dist = 2.35;
     const p = dist / (dist + zz);
     return { x: xx*p, y: yy*p, p, zz };
   }
-
   function drawStar(x,y,R,r){
     ctx.beginPath();
     for(let i=0;i<10;i++){
@@ -377,20 +336,17 @@
     ctx.closePath(); ctx.fill();
   }
 
-  // TREE
   const tree=[], ornaments=[], lights=[], garlands=[];
   const N_TREE = 3200;
-
   function initTree(){
     tree.length=0; ornaments.length=0; lights.length=0; garlands.length=0;
     const cols = palettes[palIndex].cols;
 
     for(let i=0;i<N_TREE;i++){
-      const t = i/(N_TREE-1); // 0 top -> 1 bottom
+      const t = i/(N_TREE-1);
       const radius = (0.03 + 0.66*t) * (0.92 + 0.10*Math.sin(t*11.0));
       const turns = 19;
       const ang = t*Math.PI*2*turns + rand(-0.35,0.35);
-
       tree.push({ nx:Math.cos(ang)*radius, nz:Math.sin(ang)*radius, ny:t,
         size:rand(0.55,3.1), phase:rand(0,Math.PI*2), spd:rand(0.9,2.8), tw:rand(0.35,1.15),
         c: cols[Math.floor(rand(0, cols.length))]
@@ -418,10 +374,9 @@
   }
   initTree();
 
-  // Sparkle orbit particles
-  const orbitSparkles = [];
+  const orbitSparkles=[];
   function initOrbitSparkles(){
-    orbitSparkles.length = 0;
+    orbitSparkles.length=0;
     const rings = [
       { y: -0.18, rx: 0.64, rz: 0.26, count: 110, spd: 0.86 },
       { y: -0.04, rx: 0.74, rz: 0.30, count: 140, spd: 0.68 },
@@ -440,18 +395,12 @@
     }
   }
 
-  // Gifts + hotspots (nhiều hộp hơn)
+  // gifts
   const giftHotspots = [
     { id:"gift1", x:-0.30, y:0.92, w:0.20, h:0.13, c:"#ff4d6d" },
     { id:"gift2", x: 0.00, y:0.94, w:0.18, h:0.12, c:"#4cc9f0" },
     { id:"gift3", x: 0.30, y:0.92, w:0.20, h:0.13, c:"#ffd166" },
-    { id:"gift1", x:-0.12, y:0.90, w:0.14, h:0.10, c:"#b388ff" },
-    { id:"gift2", x: 0.14, y:0.90, w:0.14, h:0.10, c:"#a7ff83" },
-    { id:"gift3", x: 0.00, y:0.88, w:0.13, h:0.10, c:"#ffffff" },
-    { id:"gift2", x:-0.42, y:0.93, w:0.14, h:0.10, c:"#ff9f1c" },
-    { id:"gift1", x: 0.42, y:0.93, w:0.14, h:0.10, c:"#7df9ff" },
   ];
-
   const hotspots = document.getElementById('hotspots');
   function giftIconSVG(color){
     return `
@@ -460,91 +409,87 @@
         <rect x="11" y="9" width="2" height="12" rx="1" fill="rgba(0,0,0,.16)"/>
         <rect x="4" y="14" width="16" height="2" rx="1" fill="rgba(0,0,0,.16)"/>
         <path d="M12 9c-2.3-1.3-4-2.7-3.2-4.2.8-1.6 3.2-1.1 4.2.7.7 1.2 1.1 2.2 1.2 3.5" fill="rgba(255,255,255,.55)"/>
-        <path d="M12 9c2.3-1.3 4-2.7 3.2-4.2-.8-1.6-3.2-1.1-4.2.7-.7 1.2 1.1 2.2 1.2 3.5" fill="rgba(255,255,255,.55)"/>
+        <path d="M12 9c2.3-1.3 4-2.7 3.2-4.2-.8-1.6-3.2-1.1-4.2.7.7 1.2 1.1 2.2 1.2 3.5" fill="rgba(255,255,255,.55)"/>
       </svg>`;
   }
-  const hsEls = [];
-  hotspots.innerHTML = "";
+  const hsEls=[];
+  hotspots.innerHTML="";
   for(const g of giftHotspots){
-    const el = document.createElement('div');
-    el.className = "giftHotspot";
-    el.dataset.gift = g.id;
-    el.innerHTML = giftIconSVG(g.c);
+    const el=document.createElement('div');
+    el.className="giftHotspot";
+    el.dataset.gift=g.id;
+    el.innerHTML=giftIconSVG(g.c);
     hotspots.appendChild(el);
     hsEls.push(el);
   }
 
   function roundRect(x,y,w,h,r){
-    const rr = Math.min(r, w/2, h/2);
+    const rr=Math.min(r,w/2,h/2);
     ctx.beginPath();
-    ctx.moveTo(x+rr, y);
-    ctx.arcTo(x+w, y, x+w, y+h, rr);
-    ctx.arcTo(x+w, y+h, x, y+h, rr);
-    ctx.arcTo(x, y+h, x, y, rr);
-    ctx.arcTo(x, y, x+w, y, rr);
+    ctx.moveTo(x+rr,y);
+    ctx.arcTo(x+w,y,x+w,y+h,rr);
+    ctx.arcTo(x+w,y+h,x,y+h,rr);
+    ctx.arcTo(x,y+h,x,y,rr);
+    ctx.arcTo(x,y,x+w,y,rr);
     ctx.closePath();
   }
   function drawGiftBox(centerX, baseY, scale, g, alpha){
-    const x = centerX + g.x*scale;
-    const y = baseY + g.y*scale;
-    const ww = g.w*scale;
-    const hh = g.h*scale;
-
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = g.c;
-    roundRect(x-ww/2, y-hh/2, ww, hh, 16);
+    const x=centerX+g.x*scale;
+    const y=baseY+g.y*scale;
+    const ww=g.w*scale;
+    const hh=g.h*scale;
+    ctx.globalAlpha=alpha;
+    ctx.fillStyle=g.c;
+    roundRect(x-ww/2,y-hh/2,ww,hh,16);
     ctx.fill();
-
-    ctx.globalAlpha = alpha*0.70;
-    ctx.fillStyle = "rgba(255,255,255,0.45)";
-    ctx.fillRect(x-ww*0.07, y-hh/2, ww*0.14, hh);
-    ctx.fillRect(x-ww/2, y-hh*0.07, ww, hh*0.14);
-
-    ctx.globalCompositeOperation = "lighter";
-    ctx.globalAlpha = alpha*0.22;
-    ctx.fillStyle = g.c;
-    ctx.beginPath(); ctx.arc(x, y-hh*0.15, Math.max(ww,hh)*0.55, 0, Math.PI*2); ctx.fill();
-    ctx.globalCompositeOperation = "source-over";
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha=alpha*0.70;
+    ctx.fillStyle="rgba(255,255,255,0.45)";
+    ctx.fillRect(x-ww*0.07,y-hh/2,ww*0.14,hh);
+    ctx.fillRect(x-ww/2,y-hh*0.07,ww,hh*0.14);
+    ctx.globalCompositeOperation="lighter";
+    ctx.globalAlpha=alpha*0.22;
+    ctx.fillStyle=g.c;
+    ctx.beginPath(); ctx.arc(x,y-hh*0.15,Math.max(ww,hh)*0.55,0,Math.PI*2); ctx.fill();
+    ctx.globalCompositeOperation="source-over";
+    ctx.globalAlpha=1;
   }
 
-  // Lightbox
-  const lightbox = document.getElementById('lightbox');
-  const controls = document.getElementById('controls');
-  const gimg = document.getElementById('gimg');
-  const gtitle = document.getElementById('gtitle');
-  const gsub = document.getElementById('gsub');
-  const closeBtn = document.getElementById('closeBtn');
-  const prevBtn = document.getElementById('prevBtn');
-  const nextBtn = document.getElementById('nextBtn');
-
+  // lightbox
+  const lightbox=document.getElementById('lightbox');
+  const controls=document.getElementById('controls');
+  const gimg=document.getElementById('gimg');
+  const gtitle=document.getElementById('gtitle');
+  const gsub=document.getElementById('gsub');
+  const closeBtn=document.getElementById('closeBtn');
+  const prevBtn=document.getElementById('prevBtn');
+  const nextBtn=document.getElementById('nextBtn');
   let currentGift=null, currentIndex=0;
 
   function safeLoad(url){
     return new Promise(resolve=>{
-      const im = new Image();
-      im.onload = ()=>resolve(url);
-      im.onerror = ()=>resolve(PLACEHOLDER);
-      im.src = url;
+      const im=new Image();
+      im.onload=()=>resolve(url);
+      im.onerror=()=>resolve(PLACEHOLDER);
+      im.src=url;
     });
   }
   async function renderGallery(){
-    const album = GIFT_ALBUMS[currentGift];
-    const total = album?.images?.length || 1;
-    currentIndex = (currentIndex + total) % total;
-    const src = album?.images?.[currentIndex] || PLACEHOLDER;
-    gimg.src = await safeLoad(src);
-    gtitle.textContent = album?.title || "Gift";
-    gsub.textContent = `Ảnh ${currentIndex+1}/${total}`;
+    const album=GIFT_ALBUMS[currentGift];
+    const total=album?.images?.length||1;
+    currentIndex=(currentIndex+total)%total;
+    const src=album?.images?.[currentIndex]||PLACEHOLDER;
+    gimg.src=await safeLoad(src);
+    gtitle.textContent=album?.title||"Gift";
+    gsub.textContent=`Ảnh ${currentIndex+1}/${total}`;
   }
   async function openGift(giftId){
-    const album = GIFT_ALBUMS[giftId];
+    const album=GIFT_ALBUMS[giftId];
     if(!album || !album.images || album.images.length===0){
-      debug = true; panel.classList.add('show');
-      panel.textContent = "GIFT CONFIG:\nChưa cấu hình ảnh cho " + giftId + " trong GIFT_ALBUMS.\n\n" + panel.textContent;
+      debug=true; panel.classList.add('show'); icoDebug.classList.add('on');
+      panel.textContent="GIFT CONFIG:\nChưa cấu hình ảnh cho "+giftId+"\n\n"+panel.textContent;
       return;
     }
-    currentGift = giftId; currentIndex = 0;
+    currentGift=giftId; currentIndex=0;
     lightbox.classList.add('show');
     controls.classList.add('show');
     await renderGallery();
@@ -555,304 +500,205 @@
   }
   async function prev(){ if(!currentGift) return; currentIndex--; await renderGallery(); }
   async function next(){ if(!currentGift) return; currentIndex++; await renderGallery(); }
-
   closeBtn.addEventListener('click', closeGift);
   prevBtn.addEventListener('click', prev);
   nextBtn.addEventListener('click', next);
   lightbox.addEventListener('click', (e)=>{ if(e.target===lightbox) closeGift(); });
-  window.addEventListener('keydown', (e)=>{
-    if(!lightbox.classList.contains('show')) return;
-    if(e.key==='Escape') closeGift();
-    if(e.key==='ArrowLeft') prev();
-    if(e.key==='ArrowRight') next();
-  });
 
   hotspots.addEventListener('click', (e)=>{
-    const el = e.target.closest('.giftHotspot');
+    const el=e.target.closest('.giftHotspot');
     if(!el) return;
-    const giftId = el.dataset.gift;
-    const rect = el.getBoundingClientRect();
-    spawnBurst(rect.left + rect.width/2, rect.top + rect.height/2, palettes[palIndex].cols);
+    const giftId=el.dataset.gift;
+    const rect=el.getBoundingClientRect();
+    spawnBurst(rect.left+rect.width/2, rect.top+rect.height/2, palettes[palIndex].cols);
     openGift(giftId);
   });
 
-  // Render loop
-  let last = performance.now();
-  let autoRot = 0;
+  // ================================
+  // 5) Render loop
+  // ================================
+  let last=performance.now();
+  let autoRot=0;
 
   function frame(now){
-    const dt = Math.min(40, now-last); last=now;
-    const t = now*0.001;
-    const pal = palettes[palIndex];
+    const dt=Math.min(40, now-last); last=now;
+    const t=now*0.001;
+    const pal=palettes[palIndex];
+    autoRot += (dt*0.001)*0.85;
 
-    autoRot += (dt*0.001) * 0.85;
-
-    // background gradient
-    const bg = ctx.createLinearGradient(0,0,0,H);
-    bg.addColorStop(0, pal.bg1);
-    bg.addColorStop(1, pal.bg2);
-    ctx.fillStyle = bg;
+    const bg=ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,pal.bg1);
+    bg.addColorStop(1,pal.bg2);
+    ctx.fillStyle=bg;
     ctx.fillRect(0,0,W,H);
 
-    // bloom clouds
-    ctx.globalCompositeOperation = "lighter";
+    ctx.globalCompositeOperation="lighter";
     for(let i=0;i<4;i++){
-      const rx = W*(0.18 + i*0.22) + Math.sin(t*0.35+i)*70;
-      const ry = H*(0.22 + (i%2)*0.12);
-      const rad = W*(0.28 + (i%2)*0.08);
-      const gg = ctx.createRadialGradient(rx,ry,0,rx,ry,rad);
-      gg.addColorStop(0, `rgba(125,249,255,${0.06 + 0.03*Math.sin(t+i)})`);
-      gg.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = gg;
+      const rx=W*(0.18+i*0.22)+Math.sin(t*0.35+i)*70;
+      const ry=H*(0.22+(i%2)*0.12);
+      const rad=W*(0.28+(i%2)*0.08);
+      const gg=ctx.createRadialGradient(rx,ry,0,rx,ry,rad);
+      gg.addColorStop(0,`rgba(125,249,255,${0.06+0.03*Math.sin(t+i)})`);
+      gg.addColorStop(1,"rgba(0,0,0,0)");
+      ctx.fillStyle=gg;
       ctx.beginPath(); ctx.arc(rx,ry,rad,0,Math.PI*2); ctx.fill();
     }
-    ctx.globalCompositeOperation = "source-over";
+    ctx.globalCompositeOperation="source-over";
 
-    // trails
-    ctx.fillStyle = "rgba(0,0,0,0.10)";
+    ctx.fillStyle="rgba(0,0,0,0.10)";
     ctx.fillRect(0,0,W,H);
 
-    // snow
-    ctx.globalAlpha = 0.92;
+    ctx.globalAlpha=0.92;
     for(const s of snow){
       s.w += 0.01 + s.r*0.002;
       s.y += s.v;
       s.x += s.s + Math.sin(s.w)*0.35;
-      if(s.y > H+10){ s.y=-10; s.x=rand(0,W); }
-      if(s.x < -10) s.x = W+10;
-      if(s.x > W+10) s.x = -10;
-      ctx.beginPath();
-      ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-      ctx.fillStyle = `rgba(255,255,255,${s.a})`;
+      if(s.y>H+10){ s.y=-10; s.x=rand(0,W); }
+      if(s.x<-10) s.x=W+10;
+      if(s.x>W+10) s.x=-10;
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(255,255,255,${s.a})`;
       ctx.fill();
     }
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha=1;
 
-    // fireflies
-    ctx.globalCompositeOperation = "lighter";
+    ctx.globalCompositeOperation="lighter";
     for(const f of fireflies){
       f.phase += 0.012;
       f.x += f.vx + Math.sin(f.phase)*0.12;
       f.y += f.vy + Math.cos(f.phase)*0.10;
-      if(f.x < W*0.10 || f.x > W*0.90) f.vx *= -1;
-      if(f.y < H*0.08 || f.y > H*0.92) f.vy *= -1;
-      const a = 0.16 + 0.28*(0.5+0.5*Math.sin(f.phase*1.7));
-      ctx.globalAlpha = a;
-      ctx.fillStyle = pal.cols[(Math.floor(f.phase*10)) % pal.cols.length];
-      ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI*2); ctx.fill();
-      ctx.globalAlpha = a*0.35;
-      ctx.beginPath(); ctx.arc(f.x, f.y, f.r*6.0, 0, Math.PI*2); ctx.fill();
+      if(f.x < W*0.10 || f.x > W*0.90) f.vx*=-1;
+      if(f.y < H*0.08 || f.y > H*0.92) f.vy*=-1;
+      const a=0.16+0.28*(0.5+0.5*Math.sin(f.phase*1.7));
+      ctx.globalAlpha=a;
+      ctx.fillStyle=pal.cols[(Math.floor(f.phase*10))%pal.cols.length];
+      ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,Math.PI*2); ctx.fill();
+      ctx.globalAlpha=a*0.35;
+      ctx.beginPath(); ctx.arc(f.x,f.y,f.r*6.0,0,Math.PI*2); ctx.fill();
     }
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha=1;
 
-    // camera
-    const rotY = autoRot;
-    const rotX = -0.18;
-    const cx = W*0.5;
-    const cy = H*0.56;
-    const scale = Math.min(W,H)*0.55;
+    const rotY=autoRot, rotX=-0.18;
+    const cx=W*0.5, cy=H*0.56;
+    const scale=Math.min(W,H)*0.55;
 
-    // halo + rays
-    const haloR = scale*0.68;
-    const halo = ctx.createRadialGradient(cx, cy, haloR*0.10, cx, cy, haloR);
-    halo.addColorStop(0, "rgba(255,239,154,0.00)");
-    halo.addColorStop(0.40, `rgba(125,249,255,${0.12 + 0.05*Math.sin(t*0.9)})`);
-    halo.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = halo;
-    ctx.beginPath(); ctx.arc(cx, cy, haloR, 0, Math.PI*2); ctx.fill();
+    const haloR=scale*0.68;
+    const halo=ctx.createRadialGradient(cx,cy,haloR*0.10,cx,cy,haloR);
+    halo.addColorStop(0,"rgba(255,239,154,0.00)");
+    halo.addColorStop(0.40,`rgba(125,249,255,${0.12+0.05*Math.sin(t*0.9)})`);
+    halo.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle=halo;
+    ctx.beginPath(); ctx.arc(cx,cy,haloR,0,Math.PI*2); ctx.fill();
 
-    ctx.globalAlpha = 0.10;
+    ctx.globalAlpha=0.10;
     for(let i=0;i<24;i++){
-      const a = (i/24)*Math.PI*2 + t*0.18;
-      ctx.strokeStyle = "rgba(255,239,154,0.20)";
-      ctx.lineWidth = 1.2;
+      const a=(i/24)*Math.PI*2 + t*0.18;
+      ctx.strokeStyle="rgba(255,239,154,0.20)";
+      ctx.lineWidth=1.2;
       ctx.beginPath();
-      ctx.moveTo(cx + Math.cos(a)*scale*0.12, cy + Math.sin(a)*scale*0.12);
-      ctx.lineTo(cx + Math.cos(a)*scale*0.98, cy + Math.sin(a)*scale*0.98);
+      ctx.moveTo(cx+Math.cos(a)*scale*0.12, cy+Math.sin(a)*scale*0.12);
+      ctx.lineTo(cx+Math.cos(a)*scale*0.98, cy+Math.sin(a)*scale*0.98);
       ctx.stroke();
     }
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha=1;
 
-    // star
-    const starY = cy - scale*0.62;
-    const rg = ctx.createRadialGradient(cx, starY, 0, cx, starY, scale*0.30);
-    rg.addColorStop(0, `rgba(255,239,154,${0.70 + 0.12*Math.sin(t*2.1)})`);
-    rg.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = rg;
-    ctx.beginPath(); ctx.arc(cx, starY, scale*0.30, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = "rgba(255,239,154,0.98)";
-    drawStar(cx, starY, scale*0.070, scale*0.030);
-
-    // garlands
-    ctx.lineWidth = 2;
-    for(const g of garlands){
-      const yy = cy + ((g.ny - 0.5) * 1.44) * scale;
-      const ww = scale * g.amp;
-      ctx.globalAlpha = 0.18 + 0.16*Math.sin(t*1.25 + g.phase);
-      ctx.strokeStyle = "rgba(255,255,255,0.40)";
-      ctx.beginPath();
-      ctx.ellipse(cx, yy, ww, scale*0.10, 0, 0, Math.PI);
-      ctx.stroke();
-    }
-    ctx.globalAlpha = 1;
+    const starY=cy-scale*0.62;
+    const rg=ctx.createRadialGradient(cx,starY,0,cx,starY,scale*0.30);
+    rg.addColorStop(0,`rgba(255,239,154,${0.70+0.12*Math.sin(t*2.1)})`);
+    rg.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle=rg;
+    ctx.beginPath(); ctx.arc(cx,starY,scale*0.30,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle="rgba(255,239,154,0.98)";
+    drawStar(cx,starY,scale*0.070,scale*0.030);
 
     // tree
     for(const p of tree){
-      const pulse = 0.55 + 0.45*Math.sin(t*2.2 + p.phase);
-      const twi = p.tw*pulse;
-
-      const wob = Math.sin(t*p.spd + p.phase) * 0.06;
-      const x = p.nx*(1+wob);
-      const y = (p.ny - 0.5) * 1.44;
-      const z = p.nz*(1+wob);
-
-      const pr = project(x,y,z, rotY, rotX);
-      const sx = cx + pr.x*scale;
-      const sy = cy + pr.y*scale;
-
-      const a = clamp((0.12 + twi)*pr.p, 0.06, 0.98);
-      const r0 = (p.size*1.05) * (0.65 + pr.p);
-
-      ctx.globalAlpha = a;
-      ctx.fillStyle = p.c;
+      const pulse=0.55+0.45*Math.sin(t*2.2+p.phase);
+      const twi=p.tw*pulse;
+      const wob=Math.sin(t*p.spd+p.phase)*0.06;
+      const x=p.nx*(1+wob);
+      const y=(p.ny-0.5)*1.44;
+      const z=p.nz*(1+wob);
+      const pr=project(x,y,z,rotY,rotX);
+      const sx=cx+pr.x*scale;
+      const sy=cy+pr.y*scale;
+      const a=clamp((0.12+twi)*pr.p,0.06,0.98);
+      const r0=(p.size*1.05)*(0.65+pr.p);
+      ctx.globalAlpha=a;
+      ctx.fillStyle=p.c;
       ctx.beginPath(); ctx.arc(sx,sy,r0,0,Math.PI*2); ctx.fill();
-
-      ctx.globalAlpha = a*0.26;
+      ctx.globalAlpha=a*0.26;
       ctx.beginPath(); ctx.arc(sx,sy,r0*3.2,0,Math.PI*2); ctx.fill();
     }
 
-    // lights
-    for(const l of lights){
-      const blink = 0.45 + 0.55*Math.sin(t*l.spd + l.phase);
-      const pr = project(l.nx, (l.ny-0.5)*1.44, l.nz, rotY, rotX);
-      const sx = cx + pr.x*scale;
-      const sy = cy + pr.y*scale;
-
-      const a = clamp(0.22 + 0.74*blink, 0.14, 0.98) * pr.p;
-      const r0 = l.r*(0.9 + pr.p*0.38);
-
-      ctx.globalAlpha = a;
-      ctx.fillStyle = l.c;
-      ctx.beginPath(); ctx.arc(sx,sy,r0,0,Math.PI*2); ctx.fill();
-
-      ctx.globalAlpha = a*0.42;
-      ctx.beginPath(); ctx.arc(sx,sy,r0*5.6,0,Math.PI*2); ctx.fill();
-    }
-
-    // ornaments
-    for(const o of ornaments){
-      const bob = Math.sin(t*2.2 + o.phase)*0.02;
-      const pr = project(o.nx*(1+bob), (o.ny-0.5)*1.44, o.nz*(1+bob), rotY, rotX);
-      const sx = cx + pr.x*scale;
-      const sy = cy + pr.y*scale;
-
-      const glow = 0.55 + 0.45*Math.sin(t*3.1 + o.phase);
-      ctx.globalAlpha = 0.70*glow;
-
-      ctx.fillStyle = o.c;
-      ctx.beginPath(); ctx.arc(sx, sy, o.r*(0.80+pr.p*0.25), 0, Math.PI*2); ctx.fill();
-
-      ctx.globalAlpha *= 0.42;
-      ctx.fillStyle = "rgba(255,255,255,0.90)";
-      ctx.beginPath(); ctx.arc(sx - o.r*0.25, sy - o.r*0.25, o.r*0.36, 0, Math.PI*2); ctx.fill();
-
-      ctx.globalAlpha *= 0.62;
-      ctx.fillStyle = o.c;
-      ctx.beginPath(); ctx.arc(sx, sy, o.r*2.45, 0, Math.PI*2); ctx.fill();
-    }
-
-    // sparkle orbit (depth sort)
+    // sparkle orbit
     for(const s of orbitSparkles){
-      const ring = s.ring;
-      const a = s.a0 + t*ring.spd;
-      const wobY = Math.sin(t*1.6 + s.phase)*s.yW;
-      const wobR = Math.sin(t*1.2 + s.phase)*s.rW;
-
-      const x = Math.cos(a) * (ring.rx + wobR);
-      const z = Math.sin(a) * (ring.rz + wobR*0.6);
-      const y = ring.y + wobY;
-
-      const pr = project(x, y, z, rotY, rotX);
-      s._sx = cx + pr.x*scale;
-      s._sy = cy + pr.y*scale;
-      s._p  = pr.p;
-      s._zz = pr.zz;
-      s._r  = s.size * (0.85 + pr.p*0.50);
-      const pulse = 0.55 + 0.45*Math.sin(t*2.8 + s.phase);
-      s._a  = clamp((0.10 + s.tw*pulse)*pr.p, 0.05, 0.98);
+      const ring=s.ring;
+      const a=s.a0 + t*ring.spd;
+      const wobY=Math.sin(t*1.6+s.phase)*s.yW;
+      const wobR=Math.sin(t*1.2+s.phase)*s.rW;
+      const x=Math.cos(a)*(ring.rx+wobR);
+      const z=Math.sin(a)*(ring.rz+wobR*0.6);
+      const y=ring.y+wobY;
+      const pr=project(x,y,z,rotY,rotX);
+      s._sx=cx+pr.x*scale; s._sy=cy+pr.y*scale; s._p=pr.p; s._zz=pr.zz;
+      s._r=s.size*(0.85+pr.p*0.50);
+      const pulse=0.55+0.45*Math.sin(t*2.8+s.phase);
+      s._a=clamp((0.10+s.tw*pulse)*pr.p,0.05,0.98);
     }
-    orbitSparkles.sort((a,b)=>a._zz - b._zz);
+    orbitSparkles.sort((a,b)=>a._zz-b._zz);
 
-    ctx.globalCompositeOperation = "lighter";
+    ctx.globalCompositeOperation="lighter";
     for(const s of orbitSparkles){
-      ctx.globalAlpha = s._a;
-      ctx.fillStyle = s.c;
-      ctx.beginPath(); ctx.arc(s._sx, s._sy, s._r, 0, Math.PI*2); ctx.fill();
-      ctx.globalAlpha = s._a*0.34;
-      ctx.beginPath(); ctx.arc(s._sx, s._sy, s._r*6.0, 0, Math.PI*2); ctx.fill();
+      ctx.globalAlpha=s._a;
+      ctx.fillStyle=s.c;
+      ctx.beginPath(); ctx.arc(s._sx,s._sy,s._r,0,Math.PI*2); ctx.fill();
+      ctx.globalAlpha=s._a*0.34;
+      ctx.beginPath(); ctx.arc(s._sx,s._sy,s._r*6.0,0,Math.PI*2); ctx.fill();
     }
-    ctx.globalAlpha = 1;
-    ctx.globalCompositeOperation = "source-over";
+    ctx.globalAlpha=1;
+    ctx.globalCompositeOperation="source-over";
 
-    // base glow + gifts
-    const baseY = cy + scale*0.60;
-    ctx.globalCompositeOperation = "lighter";
-    const base = ctx.createRadialGradient(cx, baseY, 0, cx, baseY, scale*0.60);
-    base.addColorStop(0, `rgba(125,249,255,${0.12 + 0.04*Math.sin(t*1.1)})`);
-    base.addColorStop(0.35, "rgba(255,239,154,0.08)");
-    base.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = base;
-    ctx.beginPath(); ctx.arc(cx, baseY, scale*0.60, 0, Math.PI*2); ctx.fill();
-    ctx.globalCompositeOperation = "source-over";
+    const baseY=cy+scale*0.60;
+    ctx.globalCompositeOperation="lighter";
+    const base=ctx.createRadialGradient(cx,baseY,0,cx,baseY,scale*0.60);
+    base.addColorStop(0,`rgba(125,249,255,${0.12+0.04*Math.sin(t*1.1)})`);
+    base.addColorStop(0.35,"rgba(255,239,154,0.08)");
+    base.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle=base;
+    ctx.beginPath(); ctx.arc(cx,baseY,scale*0.60,0,Math.PI*2); ctx.fill();
+    ctx.globalCompositeOperation="source-over";
 
-    for(const g of giftHotspots){
-      drawGiftBox(cx, baseY, scale, g, 0.97);
-    }
+    for(const g of giftHotspots) drawGiftBox(cx,baseY,scale,g,0.97);
 
-    // bursts
-    ctx.globalCompositeOperation = "lighter";
+    ctx.globalCompositeOperation="lighter";
     for(let i=bursts.length-1;i>=0;i--){
-      const b = bursts[i];
-      b.life -= 1;
-      b.x += b.vx; b.y += b.vy;
-      b.vx *= 0.985; b.vy *= 0.985;
-      b.vy += 0.02;
-      const aa = Math.max(0, b.life/105);
-      ctx.globalAlpha = aa;
-      ctx.fillStyle = b.c;
+      const b=bursts[i];
+      b.life-=1;
+      b.x+=b.vx; b.y+=b.vy;
+      b.vx*=0.985; b.vy*=0.985;
+      b.vy+=0.02;
+      const aa=Math.max(0,b.life/105);
+      ctx.globalAlpha=aa;
+      ctx.fillStyle=b.c;
       ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill();
       if(b.life<=0) bursts.splice(i,1);
     }
-    ctx.globalAlpha = 1;
-    ctx.globalCompositeOperation = "source-over";
+    ctx.globalAlpha=1;
+    ctx.globalCompositeOperation="source-over";
 
     // align hotspots
     for(let i=0;i<giftHotspots.length;i++){
-      const g = giftHotspots[i];
-      const el = hsEls[i];
-      el.style.left = (cx + g.x*scale) + "px";
-      el.style.top  = (baseY + g.y*scale) + "px";
+      const g=giftHotspots[i];
+      const el=hsEls[i];
+      el.style.left=(cx+g.x*scale)+"px";
+      el.style.top=(baseY+g.y*scale)+"px";
     }
 
     requestAnimationFrame(frame);
   }
 
-  // Start
-  initOrbitSparkles();
   requestAnimationFrame(frame);
-
-  // Gate behavior: luôn cho render cây, rồi tự cho vào trang
-  (async () => {
-    gateMsg.textContent = "Đang kiểm tra nhạc…";
-    const ok = await checkAudioExists();
-    if(ok){
-      gateMsg.textContent = "Đang thử autoplay nhạc… (nếu bị chặn bạn chỉ cần bấm BẬT NHẠC)";
-      await tryPlay().catch(()=>{});
-    }
-    // Cho xem luôn (không bắt buộc phải bấm)
-    setTimeout(()=>{ gate.style.display = "none"; }, 1200);
-  })();
-
 })();
 </script>
 </body>
