@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Merry Christmas - Particle Tree (Enhanced)</title>
+  <title>Noel - Cây thông tự quay + click hiện ảnh</title>
   <style>
     :root{
       --bg1:#050814;
@@ -14,7 +14,7 @@
     }
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;overflow:hidden;background:var(--bg1);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
-    canvas{position:fixed;inset:0}
+    canvas{position:fixed; inset:0}
 
     .top{
       position:fixed; top:16px; left:0; right:0;
@@ -35,19 +35,15 @@
     }
 
     .hud{
-      position:fixed; left:16px; bottom:16px; z-index:8;
+      position:fixed; left:16px; bottom:16px; z-index:7;
       display:flex; gap:10px; align-items:center; flex-wrap:wrap;
       color:rgba(234,242,255,.86);
       font-size:13px;
       user-select:none;
     }
     .btn{
-      cursor:pointer;
-      border:none;
-      border-radius:999px;
-      padding:10px 12px;
-      color:var(--fg);
-      font-weight:900;
+      cursor:pointer;border:none;border-radius:999px;
+      padding:10px 12px;color:var(--fg);font-weight:900;
       background:rgba(255,255,255,.08);
       border:1px solid rgba(255,255,255,.16);
       backdrop-filter: blur(10px);
@@ -56,53 +52,228 @@
     }
     .btn:hover{ transform: translateY(-1px); opacity:1; }
     .tip{
-      padding:10px 12px;
-      border-radius:14px;
+      padding:10px 12px;border-radius:14px;
       background:rgba(255,255,255,.06);
       border:1px solid rgba(255,255,255,.12);
       backdrop-filter: blur(10px);
       box-shadow:0 18px 40px rgba(0,0,0,.35);
-      max-width:min(520px, 92vw);
+      max-width:min(560px, 92vw);
     }
 
-    /* Optional MP3 audio element (hidden) */
-    audio{ display:none; }
+    /* clickable hotspots layer (over canvas) */
+    .hotspots{
+      position:fixed; inset:0; z-index:8;
+      pointer-events:auto;
+    }
+    .hotspot{
+      position:absolute;
+      width:46px; height:46px;
+      border-radius:14px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(10px);
+      box-shadow:0 18px 40px rgba(0,0,0,.35);
+      display:grid; place-items:center;
+      cursor:pointer;
+      transform: translate(-50%,-50%);
+      transition: transform .15s ease, filter .15s ease;
+      pointer-events:auto;
+    }
+    .hotspot:hover{
+      transform: translate(-50%,-50%) scale(1.06);
+      filter: drop-shadow(0 0 18px rgba(255,239,154,.28));
+    }
+    .hotspot svg{ width:28px; height:28px; }
+
+    /* lightbox */
+    .lightbox{
+      position:fixed; inset:0;
+      z-index:20;
+      display:none;
+      place-items:center;
+      background:rgba(0,0,0,.55);
+      backdrop-filter: blur(6px);
+    }
+    .lightbox.show{ display:grid; }
+    .viewer{
+      width:min(520px, 92vw);
+      aspect-ratio: 4/3;
+      border-radius:18px;
+      overflow:hidden;
+      border:3px solid rgba(255,239,154,.75);
+      box-shadow:0 40px 120px rgba(0,0,0,.6);
+      background:#0b1230;
+      position:relative;
+    }
+    .viewer img{
+      width:100%; height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .close{
+      position:fixed; top:16px; right:16px; z-index:21;
+      border:none; cursor:pointer;
+      padding:10px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.16);
+      color:var(--fg);
+      font-weight:900;
+      backdrop-filter: blur(10px);
+      box-shadow:0 18px 40px rgba(0,0,0,.35);
+    }
+    .cap{
+      position:absolute; left:12px; right:12px; bottom:12px;
+      padding:10px 12px;
+      border-radius:14px;
+      background:rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.14);
+      color:rgba(234,242,255,.92);
+      font-weight:900;
+      text-shadow:0 10px 30px rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+    }
+    .cap small{display:block; font-weight:700; opacity:.8; margin-top:3px}
   </style>
 </head>
 <body>
   <canvas id="c"></canvas>
+
   <div class="top"><span>MERRY CHRISTMAS</span></div>
 
   <div class="hud">
-    <button class="btn" id="toggleScene">🎄/✨ Chuyển cảnh</button>
-    <button class="btn" id="musicBtn">▶️ Play nhạc</button>
     <button class="btn" id="paletteBtn">🎨 Đổi màu</button>
-    <div class="tip">Kéo chuột để xoay nhẹ • Click để “burst sparkle” • Nhạc: chạy ngay bằng WebAudio (hoặc bạn có thể dùng MP3 riêng)</div>
+    <button class="btn" id="speedBtn">🌀 Tốc độ quay: 1x</button>
+    <div class="tip">Cây thông tự quay • Click <b>Chuông</b> hoặc <b>Quà</b> trên cây để hiện ảnh cài sẵn ✨</div>
   </div>
 
-  <!-- Nếu bạn muốn dùng nhạc MP3 của bạn:
-       1) Tạo thư mục assets/ và đặt file: assets/christmas.mp3
-       2) Bỏ comment audio dưới + đổi musicMode trong JS thành "mp3"
-  -->
-  <!-- <audio id="mp3" src="assets/christmas.mp3" loop></audio> -->
+  <!-- Clickable overlays (positions are updated by JS every frame) -->
+  <div class="hotspots" id="hotspots">
+    <div class="hotspot" id="hsBell" title="Chuông Noel">
+      <!-- bell icon -->
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M12 2c4 0 7 3 7 7v4c0 2 1 3 2 4H3c1-1 2-2 2-4V9c0-4 3-7 7-7Z" fill="rgba(255,209,102,.95)"/>
+        <path d="M8 17h8c-.5 2-2.2 3.5-4 3.5S8.5 19 8 17Z" fill="rgba(255,239,154,.95)"/>
+        <circle cx="12" cy="18" r="1.4" fill="rgba(10,20,54,.65)"/>
+        <rect x="10" y="1" width="4" height="3" rx="1.5" fill="rgba(234,242,255,.85)"/>
+      </svg>
+    </div>
+
+    <div class="hotspot" id="hsGift" title="Món quà">
+      <!-- gift icon -->
+      <svg viewBox="0 0 24 24" fill="none">
+        <rect x="4" y="9" width="16" height="12" rx="3" fill="rgba(255,77,109,.92)"/>
+        <rect x="11" y="9" width="2" height="12" rx="1" fill="rgba(255,255,255,.55)"/>
+        <rect x="4" y="14" width="16" height="2" rx="1" fill="rgba(255,255,255,.55)"/>
+        <path d="M12 9c-2.3-1.3-4-2.7-3.2-4.2.8-1.6 3.2-1.1 4.2.7.7 1.2 1.1 2.2 1.2 3.5"
+              fill="rgba(255,255,255,.55)"/>
+        <path d="M12 9c2.3-1.3 4-2.7 3.2-4.2-.8-1.6-3.2-1.1-4.2.7-.7 1.2-1.1 2.2-1.2 3.5"
+              fill="rgba(255,255,255,.55)"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <button class="close" id="closeBtn">✕</button>
+    <div class="viewer">
+      <img id="lbImg" alt="preset image" />
+      <div class="cap" id="lbCap">Ảnh<div><small id="lbSub">Mô tả</small></div></div>
+    </div>
+  </div>
 
 <script>
 (() => {
-  // ===============================
-  // 0) CONFIG
-  // ===============================
+  // =============================
+  // Preset images (embedded SVG)
+  // =============================
+  function svgData(svg){ return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg); }
+
+  const PRESET = {
+    bell: {
+      title: "Chuông Noel",
+      sub: "Jingle bells ✨",
+      src: svgData(`
+        <svg xmlns="http://www.w3.org/2000/svg" width="900" height="675">
+          <defs>
+            <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+              <stop stop-color="#ffef9a" stop-opacity=".35"/>
+              <stop offset="1" stop-color="#0a1436"/>
+            </linearGradient>
+            <radialGradient id="g" cx="35%" cy="25%" r="80%">
+              <stop stop-color="#7df9ff" stop-opacity=".22"/>
+              <stop offset="1" stop-color="rgba(0,0,0,0)"/>
+            </radialGradient>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#bg)"/>
+          <circle cx="210" cy="140" r="260" fill="url(#g)"/>
+          <text x="60" y="110" fill="#eaf2ff" font-family="Verdana" font-size="54" font-weight="800">Jingle Bell</text>
+          <text x="60" y="168" fill="#eaf2ff" font-family="Verdana" font-size="26" opacity=".85">Chúc bạn một mùa Giáng sinh an lành!</text>
+
+          <g transform="translate(450,170)">
+            <path d="M0 0c120 0 216 96 216 216v120c0 78-60 144-144 156H-72c-84-12-144-78-144-156V216C-216 96-120 0 0 0z"
+              fill="#ffd166"/>
+            <path d="M-174 372h348c-18 54-66 90-120 90H-54c-54 0-102-36-120-90z"
+              fill="#ffef9a" opacity=".95"/>
+            <circle cx="0" cy="470" r="28" fill="#0a1436" opacity=".7"/>
+            <rect x="-42" y="-48" width="84" height="56" rx="28" fill="#eaf2ff" opacity=".9"/>
+            <path d="M-110 120c40-60 90-90 110-90s70 30 110 90" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="14" stroke-linecap="round"/>
+          </g>
+        </svg>
+      `)
+    },
+    gift: {
+      title: "Món quà",
+      sub: "Surprise time 🎁",
+      src: svgData(`
+        <svg xmlns="http://www.w3.org/2000/svg" width="900" height="675">
+          <defs>
+            <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+              <stop stop-color="#ff4d6d" stop-opacity=".25"/>
+              <stop offset="1" stop-color="#0a1436"/>
+            </linearGradient>
+            <radialGradient id="gl" cx="35%" cy="25%" r="80%">
+              <stop stop-color="#ffef9a" stop-opacity=".22"/>
+              <stop offset="1" stop-color="rgba(0,0,0,0)"/>
+            </radialGradient>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#bg)"/>
+          <circle cx="220" cy="160" r="280" fill="url(#gl)"/>
+          <text x="60" y="110" fill="#eaf2ff" font-family="Verdana" font-size="54" font-weight="800">Gift Box</text>
+          <text x="60" y="168" fill="#eaf2ff" font-family="Verdana" font-size="26" opacity=".85">Mở quà ra là may mắn cả năm ✨</text>
+
+          <g transform="translate(450,220)">
+            <rect x="-220" y="120" width="440" height="280" rx="44" fill="#ff4d6d"/>
+            <rect x="-28" y="120" width="56" height="280" rx="18" fill="rgba(255,255,255,.55)"/>
+            <rect x="-220" y="232" width="440" height="56" rx="20" fill="rgba(255,255,255,.55)"/>
+
+            <path d="M-20 120c-60-30-110-70-92-110 18-42 86-30 122 24 22 32 34 58 38 86"
+              fill="rgba(255,255,255,.55)"/>
+            <path d="M20 120c60-30 110-70 92-110-18-42-86-30-122 24-22 32-34 58-38 86"
+              fill="rgba(255,255,255,.55)"/>
+            <circle cx="0" cy="120" r="28" fill="rgba(255,255,255,.65)"/>
+          </g>
+        </svg>
+      `)
+    }
+  };
+
+  // =============================
+  // Canvas setup
+  // =============================
   const canvas = document.getElementById('c');
   const ctx = canvas.getContext('2d', { alpha:false });
-
   let W=0,H=0,DPR=1;
+
   function resize(){
     DPR = Math.min(2, devicePixelRatio || 1);
-    canvas.width  = Math.floor(innerWidth * DPR);
+    canvas.width = Math.floor(innerWidth * DPR);
     canvas.height = Math.floor(innerHeight * DPR);
     canvas.style.width = innerWidth + 'px';
     canvas.style.height = innerHeight + 'px';
     ctx.setTransform(DPR,0,0,DPR,0,0);
     W = innerWidth; H = innerHeight;
+    initSnow();
   }
   addEventListener('resize', resize, {passive:true});
   resize();
@@ -118,109 +289,33 @@
   ];
   let palIndex = 0;
 
-  // Scene states: tree -> galaxy
-  let state = "tree";
-  let transition = 0; // 0..1
+  // rotation speed control
+  let speedMul = 1;
+  const speedBtn = document.getElementById('speedBtn');
+  speedBtn.addEventListener('click', ()=>{
+    speedMul = speedMul === 1 ? 1.8 : speedMul === 1.8 ? 0.6 : 1;
+    speedBtn.textContent = `🌀 Tốc độ quay: ${speedMul}x`;
+  });
+  document.getElementById('paletteBtn').addEventListener('click', ()=>{
+    palIndex = (palIndex+1) % palettes.length;
+    initAll();
+  });
 
-  // Mouse parallax rotation
-  let mx=W/2, my=H/2;
-  addEventListener('pointermove', e => { mx=e.clientX; my=e.clientY; }, {passive:true});
-
-  // ===============================
-  // 1) SHAPES & PARTICLES
-  // ===============================
+  // =============================
   // Snow
+  // =============================
   const snow = [];
   function initSnow(){
-    snow.length=0;
-    const n = Math.min(260, Math.floor(W/3));
+    snow.length = 0;
+    const n = Math.min(280, Math.floor(W/3));
     for(let i=0;i<n;i++){
       snow.push({x:rand(0,W), y:rand(0,H), r:rand(0.7,2.4), v:rand(0.6,2.2), s:rand(-0.6,0.6), w:rand(0,Math.PI*2)});
     }
   }
-  initSnow();
 
-  // Tree particles (MAIN)
-  const tree = [];
-  const ornaments = []; // bigger particles for decorations
-  const candyCanes = []; // small "stick" decorations
-  const gifts = []; // bottom gifts particles
-  const N_TREE = 1900;
-
-  function initTree(){
-    tree.length = 0;
-    ornaments.length = 0;
-    candyCanes.length = 0;
-    gifts.length = 0;
-
-    const cols = palettes[palIndex].cols;
-
-    // MAIN TREE: corrected orientation (TOP -> BOTTOM)
-    // t = 0 at top, t = 1 at bottom
-    for(let i=0;i<N_TREE;i++){
-      const t = i / (N_TREE-1);
-      const radius = (0.04 + 0.58*t) * (0.94 + 0.06*Math.sin(t*9.5)); // grows downwards
-      const turns = 14.5;
-      const ang = t * Math.PI * 2 * turns + rand(-0.35,0.35);
-
-      const nx = Math.cos(ang)*radius;
-      const nz = Math.sin(ang)*radius;
-      const ny = t; // 0..1
-
-      tree.push({
-        nx, ny, nz,
-        size: rand(0.6, 2.3),
-        phase: rand(0, Math.PI*2),
-        spd: rand(0.8, 2.0),
-        c: cols[Math.floor(rand(0, cols.length))],
-        tw: rand(0.35, 1.0),
-        // galaxy motion params
-        gx: rand(-1,1),
-        gy: rand(-1,1),
-        gvx: rand(-0.22,0.22),
-        gvy: rand(-0.22,0.22),
-      });
-    }
-
-    // Ornaments (baubles) positioned on tree
-    const ornamentColors = ['#ff4d6d','#ffd166','#4cc9f0','#a7ff83','#b388ff','#ffffff'];
-    const ornamentCount = 14;
-    for(let i=0;i<ornamentCount;i++){
-      const t = rand(0.18, 0.92);
-      const radius = 0.06 + 0.50*t;
-      const ang = rand(0, Math.PI*2);
-      ornaments.push({
-        nx: Math.cos(ang)*radius,
-        nz: Math.sin(ang)*radius,
-        ny: t,
-        r: rand(3.2, 6.2),
-        c: ornamentColors[i % ornamentColors.length],
-        phase: rand(0, Math.PI*2)
-      });
-    }
-
-    // Candy canes (small sticks)
-    for(let i=0;i<8;i++){
-      const t = rand(0.22, 0.88);
-      const radius = 0.05 + 0.52*t;
-      const ang = rand(0, Math.PI*2);
-      candyCanes.push({
-        nx: Math.cos(ang)*radius,
-        nz: Math.sin(ang)*radius,
-        ny: t,
-        len: rand(10, 18),
-        phase: rand(0, Math.PI*2)
-      });
-    }
-
-    // Gifts at bottom (2 boxes)
-    gifts.push({x:-0.18, y:0.78, w:0.14, h:0.10, c:'#ff4d6d'});
-    gifts.push({x: 0.14, y:0.80, w:0.13, h:0.09, c:'#4cc9f0'});
-    gifts.push({x:-0.02, y:0.83, w:0.12, h:0.085, c:'#ffd166'});
-  }
-  initTree();
-
-  // ========= fake 3D projection =========
+  // =============================
+  // Fake 3D projection
+  // =============================
   function project(x,y,z, rotY, rotX){
     const cy=Math.cos(rotY), sy=Math.sin(rotY);
     let xx = x*cy + z*sy;
@@ -235,7 +330,99 @@
     return { x: xx*p, y: yy*p, p };
   }
 
-  // ========= Star shape =========
+  // =============================
+  // Tree particles + decorations
+  // =============================
+  const tree = [];
+  const ornaments = [];   // baubles
+  const lights = [];      // blinking bulbs
+  const garlands = [];    // garland seed points
+
+  // clickable decorations (bell, gift) in 3D coords
+  const decos = {
+    bell: { nx: 0.12, ny: 0.28, nz: 0.08 },
+    gift: { nx: -0.18, ny: 0.62, nz: -0.10 }
+  };
+
+  function initAll(){
+    initSnow();
+    initTree();
+  }
+
+  function initTree(){
+    tree.length = 0;
+    ornaments.length = 0;
+    lights.length = 0;
+    garlands.length = 0;
+
+    const cols = palettes[palIndex].cols;
+    const N_TREE = 2000;
+
+    // TREE: t=0 top, t=1 bottom  ✅ (không bị ngược)
+    for(let i=0;i<N_TREE;i++){
+      const t = i/(N_TREE-1);
+      const radius = (0.04 + 0.58*t) * (0.94 + 0.06*Math.sin(t*9.5));
+      const turns = 15;
+      const ang = t * Math.PI*2 * turns + rand(-0.35, 0.35);
+
+      const nx = Math.cos(ang)*radius;
+      const nz = Math.sin(ang)*radius;
+      const ny = t;
+
+      tree.push({
+        nx,ny,nz,
+        size: rand(0.6, 2.4),
+        phase: rand(0, Math.PI*2),
+        spd: rand(0.8, 2.1),
+        c: cols[Math.floor(rand(0, cols.length))],
+        tw: rand(0.35, 1.0)
+      });
+    }
+
+    // baubles
+    const ornamentColors = ['#ff4d6d','#ffd166','#4cc9f0','#a7ff83','#b388ff','#ffffff'];
+    for(let i=0;i<18;i++){
+      const t = rand(0.16, 0.92);
+      const radius = 0.06 + 0.50*t;
+      const ang = rand(0, Math.PI*2);
+      ornaments.push({
+        nx: Math.cos(ang)*radius,
+        nz: Math.sin(ang)*radius,
+        ny: t,
+        r: rand(3.0, 6.8),
+        c: ornamentColors[i % ornamentColors.length],
+        phase: rand(0, Math.PI*2)
+      });
+    }
+
+    // blinking lights distributed around garlands
+    const bulbs = 42;
+    for(let i=0;i<bulbs;i++){
+      const t = rand(0.18, 0.94);
+      const radius = 0.06 + 0.52*t;
+      const ang = rand(0, Math.PI*2);
+      lights.push({
+        nx: Math.cos(ang)*radius,
+        nz: Math.sin(ang)*radius,
+        ny: t,
+        r: rand(1.6, 2.8),
+        c: cols[i % cols.length],
+        phase: rand(0, Math.PI*2),
+        spd: rand(2.0, 4.2)
+      });
+    }
+
+    // garland seed arcs (for drawing lines)
+    for(let k=0;k<4;k++){
+      garlands.push({ ny: 0.18 + k*0.18, amp: 0.36 + k*0.08, phase: rand(0, Math.PI*2) });
+    }
+  }
+
+  initAll();
+
+  // =============================
+  // Star
+  // =============================
   function drawStar(x,y,R,r){
     ctx.beginPath();
     for(let i=0;i<10;i++){
@@ -246,161 +433,67 @@
     ctx.closePath(); ctx.fill();
   }
 
-  // ========= Floating text =========
-  const textPops = [];
-  function spawnText(x,y,txt){
-    textPops.push({x,y,vy:rand(-1.6,-1.1), life:70, txt});
+  // =============================
+  // Hotspot positioning
+  // =============================
+  const hsBell = document.getElementById('hsBell');
+  const hsGift = document.getElementById('hsGift');
+
+  function setHotspot(el, x, y, visible){
+    el.style.left = x + "px";
+    el.style.top = y + "px";
+    el.style.display = visible ? "grid" : "none";
   }
 
-  // ========= Burst sparkle =========
-  const bursts = [];
-  addEventListener('click', (e)=>{
-    // add burst
-    const cols = palettes[palIndex].cols;
-    for(let i=0;i<140;i++){
-      bursts.push({
-        x:e.clientX, y:e.clientY,
-        vx:rand(-2.2,2.2),
-        vy:rand(-2.2,2.2),
-        life:rand(22,60),
-        r:rand(1.2,3.2),
-        c: cols[i % cols.length]
-      });
-    }
-    spawnText(e.clientX, e.clientY, "Merry Christmas ✨");
-  });
+  // =============================
+  // Lightbox handlers
+  // =============================
+  const lightbox = document.getElementById('lightbox');
+  const lbImg = document.getElementById('lbImg');
+  const lbCap = document.getElementById('lbCap');
+  const lbSub = document.getElementById('lbSub');
 
-  // ===============================
-  // 2) SCENE CONTROLS
-  // ===============================
-  document.getElementById('toggleScene').addEventListener('click', ()=>{
-    state = (state === "tree") ? "galaxy" : "tree";
-  });
-  document.getElementById('paletteBtn').addEventListener('click', ()=>{
-    palIndex = (palIndex+1) % palettes.length;
-    initTree();
-  });
-
-  // ===============================
-  // 3) MUSIC
-  // ===============================
-  // musicMode:
-  // - "webaudio": chạy ngay (không cần file)
-  // - "mp3": dùng <audio id="mp3"> (bạn tự cung cấp file nhạc)
-  let musicMode = "webaudio"; // đổi thành "mp3" nếu bạn dùng file mp3 của bạn
-
-  let audioCtx=null, master=null, isPlaying=false, timer=null;
-  const musicBtn = document.getElementById('musicBtn');
-
-  // giai điệu vui kiểu Noel (không phải bản ghi bài hát)
-  const song = [
-    {f:659.25,d:.20},{f:659.25,d:.20},{f:659.25,d:.28},
-    {f:659.25,d:.20},{f:659.25,d:.20},{f:659.25,d:.28},
-    {f:659.25,d:.20},{f:783.99,d:.20},{f:523.25,d:.20},{f:587.33,d:.20},{f:659.25,d:.46},
-    {f:698.46,d:.20},{f:698.46,d:.20},{f:698.46,d:.20},{f:698.46,d:.20},{f:698.46,d:.20},
-    {f:659.25,d:.20},{f:659.25,d:.20},{f:659.25,d:.20},
-    {f:659.25,d:.20},{f:587.33,d:.20},{f:587.33,d:.20},{f:659.25,d:.20},{f:587.33,d:.30},{f:783.99,d:.34},
-    {f:0,d:.24},
-  ];
-
-  function ensureAudio(){
-    if(audioCtx) return;
-    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-    master = audioCtx.createGain();
-    master.gain.value = 0.16;
-    master.connect(audioCtx.destination);
+  function openPreset(key){
+    const p = PRESET[key];
+    lbImg.src = p.src;
+    lbCap.childNodes[0].nodeValue = p.title;
+    lbSub.textContent = p.sub;
+    lightbox.classList.add('show');
+    lightbox.setAttribute('aria-hidden', 'false');
   }
-  function playNote(freq, start, dur){
-    if(freq<=0) return;
-    const osc = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(freq, start);
-
-    const a=0.01, r=0.08;
-    g.gain.setValueAtTime(0.0001, start);
-    g.gain.exponentialRampToValueAtTime(1.0, start+a);
-    g.gain.exponentialRampToValueAtTime(0.0001, start+Math.max(0.02,dur-r));
-
-    osc.connect(g); g.connect(master);
-    osc.start(start); osc.stop(start+dur);
+  function closePreset(){
+    lightbox.classList.remove('show');
+    lightbox.setAttribute('aria-hidden', 'true');
   }
-  function startSong(){
-    let idx=0;
-    let t=audioCtx.currentTime+0.05;
-    function sched(){
-      if(!isPlaying) return;
-      const ahead=0.7;
-      while(t < audioCtx.currentTime+ahead){
-        const n=song[idx];
-        playNote(n.f, t, n.d);
-        t += n.d;
-        idx=(idx+1)%song.length;
-        if(idx===0) t += 0.10;
-      }
-    }
-    sched();
-    timer=setInterval(sched, 80);
-  }
-  function stopSong(){
-    if(timer){ clearInterval(timer); timer=null; }
-  }
+  document.getElementById('closeBtn').addEventListener('click', closePreset);
+  lightbox.addEventListener('click', (e)=>{ if(e.target === lightbox) closePreset(); });
 
-  const mp3 = document.getElementById('mp3'); // may be null (if comment)
-  async function toggleMusic(){
-    if(musicMode==="mp3"){
-      if(!mp3){
-        alert("Bạn đang để musicMode='mp3' nhưng chưa bật thẻ <audio id='mp3'> ở HTML.");
-        return;
-      }
-      if(mp3.paused){
-        try{ await mp3.play(); }catch(e){ alert("Trình duyệt chặn autoplay. Bấm lại Play nhé."); }
-        musicBtn.textContent = "⏸️ Pause nhạc";
-        isPlaying = true;
-      }else{
-        mp3.pause();
-        musicBtn.textContent = "▶️ Play nhạc";
-        isPlaying = false;
-      }
-      return;
-    }
+  hsBell.addEventListener('click', ()=>openPreset('bell'));
+  hsGift.addEventListener('click', ()=>openPreset('gift'));
 
-    // webaudio
-    ensureAudio();
-    if(audioCtx.state === 'suspended'){
-      try{ await audioCtx.resume(); }catch(e){}
-    }
-    if(!isPlaying){
-      isPlaying=true;
-      musicBtn.textContent="⏸️ Pause nhạc";
-      startSong();
-      spawnText(W*0.5, H*0.22, "🎶 Merry Christmas!");
-    }else{
-      isPlaying=false;
-      musicBtn.textContent="▶️ Play nhạc";
-      stopSong();
-    }
-  }
-  musicBtn.addEventListener('click', toggleMusic);
+  // =============================
+  // Render loop
+  // =============================
+  let last = performance.now();
+  let autoRot = 0;
 
-  // ===============================
-  // 4) RENDER LOOP
-  // ===============================
-  let last=performance.now();
   function frame(now){
     const dt = Math.min(40, now-last); last=now;
     const t = now*0.001;
 
     const pal = palettes[palIndex];
 
+    // auto rotation (continuous)
+    autoRot += (dt * 0.001) * 0.75 * speedMul;
+
     // background gradient
-    const g = ctx.createLinearGradient(0,0,0,H);
-    g.addColorStop(0, pal.bg1);
-    g.addColorStop(1, pal.bg2);
-    ctx.fillStyle = g;
+    const bg = ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0, pal.bg1);
+    bg.addColorStop(1, pal.bg2);
+    ctx.fillStyle = bg;
     ctx.fillRect(0,0,W,H);
 
-    // subtle motion trail (helps sparkle vibe)
+    // subtle trails (sparkle smear)
     ctx.fillStyle = "rgba(0,0,0,0.12)";
     ctx.fillRect(0,0,W,H);
 
@@ -419,105 +512,68 @@
       ctx.fillStyle = "rgba(255,255,255,0.92)";
       ctx.fill();
     }
+    ctx.globalAlpha = 1;
 
-    // transition
-    if(state==="galaxy"){
-      transition = clamp(transition + dt/900, 0, 1);
-    }else{
-      transition = clamp(transition - dt/900, 0, 1);
-    }
+    // fixed camera tilt
+    const rotY = autoRot;
+    const rotX = -0.18;
 
-    // rotate from mouse
-    const nx = (mx - W/2) / W;
-    const ny = (my - H/2) / H;
-    const rotY = nx*1.15 + Math.sin(t*0.25)*0.12;
-    const rotX = -0.18 + ny*0.55;
-
+    // center & scale
     const cx = W*0.5;
     const cy = H*0.56;
     const scale = Math.min(W,H)*0.55;
 
-    // star (top) - only strong in tree mode
+    // star at top
     const starY = cy - scale*0.60;
-    const starGlow = (1-transition);
-    if(starGlow > 0.02){
-      ctx.globalCompositeOperation = "lighter";
-      const rg = ctx.createRadialGradient(cx, starY, 0, cx, starY, scale*0.22);
-      rg.addColorStop(0, `rgba(255,239,154,${0.55*starGlow})`);
-      rg.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = rg;
-      ctx.beginPath(); ctx.arc(cx, starY, scale*0.22, 0, Math.PI*2); ctx.fill();
-
-      ctx.fillStyle = `rgba(255,239,154,${0.95*starGlow})`;
-      drawStar(cx, starY, scale*0.06, scale*0.026);
-      ctx.globalCompositeOperation = "source-over";
-    }
-
-    // trunk + base in tree mode
-    if(transition < 0.98){
-      ctx.globalAlpha = 0.9*(1-transition);
-      ctx.fillStyle = "rgba(100,60,44,0.9)";
-      const tw = scale*0.10, th = scale*0.20;
-      ctx.beginPath();
-      ctx.roundRect(cx - tw/2, cy + scale*0.33, tw, th, scale*0.03);
-      ctx.fill();
-      ctx.globalAlpha = 1;
-    }
-
-    // garland (sparkly arc lines) - tree mode
-    if(transition < 0.95){
-      ctx.globalCompositeOperation = "lighter";
-      const garA = (1-transition)*0.55;
-      ctx.globalAlpha = garA;
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = "rgba(255,255,255,0.22)";
-      for(let k=0;k<3;k++){
-        const yy = cy + scale*(-0.15 + k*0.20);
-        const ww = scale*(0.38 + k*0.10);
-        ctx.beginPath();
-        ctx.ellipse(cx, yy, ww, scale*0.10, 0, 0, Math.PI);
-        ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-      ctx.globalCompositeOperation = "source-over";
-    }
-
-    // MAIN particles
     ctx.globalCompositeOperation = "lighter";
+    const rg = ctx.createRadialGradient(cx, starY, 0, cx, starY, scale*0.22);
+    rg.addColorStop(0, "rgba(255,239,154,0.55)");
+    rg.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = rg;
+    ctx.beginPath(); ctx.arc(cx, starY, scale*0.22, 0, Math.PI*2); ctx.fill();
 
-    const cols = pal.cols;
+    ctx.fillStyle = "rgba(255,239,154,0.95)";
+    drawStar(cx, starY, scale*0.06, scale*0.026);
+
+    // trunk
+    ctx.globalCompositeOperation = "source-over";
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = "rgba(100,60,44,0.9)";
+    const tw = scale*0.10, th = scale*0.20;
+    ctx.beginPath();
+    ctx.roundRect(cx - tw/2, cy + scale*0.33, tw, th, scale*0.03);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // garlands (sparkly arcs)
+    ctx.globalCompositeOperation = "lighter";
+    ctx.lineWidth = 2;
+    for(const g of garlands){
+      const yy = cy + ((g.ny - 0.5) * 1.44) * scale;
+      const ww = scale * g.amp;
+      ctx.globalAlpha = 0.22 + 0.10*Math.sin(t*1.2 + g.phase);
+      ctx.strokeStyle = "rgba(255,255,255,0.35)";
+      ctx.beginPath();
+      ctx.ellipse(cx, yy, ww, scale*0.10, 0, 0, Math.PI);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // tree particles
     for(const p of tree){
-      // sparkle pulse
       const pulse = 0.55 + 0.45*Math.sin(t*2.1 + p.phase);
-      const tw = p.tw*pulse;
+      const twi = p.tw*pulse;
 
-      // TREE position (correct orientation):
-      // ny=t (0..1): map to y in [-0.72 .. +0.72]
       const wob = Math.sin(t*p.spd + p.phase) * 0.06;
       const tx = p.nx*(1+wob);
-      const ty = (p.ny - 0.5) * 1.44;   // TOP is negative, BOTTOM is positive ✅
+      const ty = (p.ny - 0.5) * 1.44;  // ✅ top negative, bottom positive
       const tz = p.nz*(1+wob);
 
-      // GALAXY position
-      p.gx += p.gvx*dt*0.001;
-      p.gy += p.gvy*dt*0.001;
-      if(p.gx<-1||p.gx>1) p.gvx*=-1;
-      if(p.gy<-1||p.gy>1) p.gvy*=-1;
-
-      const swirl = Math.sin(t*0.7 + p.phase)*0.25;
-      const gx = p.gx + Math.cos(t*0.35 + p.phase)*0.08;
-      const gy = p.gy + Math.sin(t*0.35 + p.phase)*0.08;
-
-      const mix = transition;
-      const x = tx*(1-mix) + gx*1.05*mix;
-      const y = ty*(1-mix) + gy*0.85*mix;
-      const z = tz*(1-mix) + swirl*mix;
-
-      const pr = project(x,y,z, rotY, rotX);
+      const pr = project(tx,ty,tz, rotY, rotX);
       const sx = cx + pr.x*scale;
       const sy = cy + pr.y*scale;
 
-      const a = clamp((0.10 + tw)*pr.p, 0.06, 0.95);
+      const a = clamp((0.10 + twi)*pr.p, 0.06, 0.95);
       const r0 = (p.size*1.05) * (0.65 + pr.p);
 
       ctx.globalAlpha = a;
@@ -528,149 +584,91 @@
       ctx.beginPath(); ctx.arc(sx, sy, r0*3.0, 0, Math.PI*2); ctx.fill();
     }
 
-    // ORNAMENTS (baubles) - tree mode only
-    if(transition < 0.98){
-      ctx.globalCompositeOperation = "lighter";
-      for(const o of ornaments){
-        const bob = Math.sin(t*2.2 + o.phase)*0.02;
-        const x = o.nx*(1+bob);
-        const y = (o.ny - 0.5) * 1.44;
-        const z = o.nz*(1+bob);
+    // blinking lights
+    for(const l of lights){
+      const blink = 0.45 + 0.55*Math.sin(t*l.spd + l.phase);
+      const x = l.nx, y = (l.ny - 0.5)*1.44, z = l.nz;
+      const pr = project(x,y,z, rotY, rotX);
+      const sx = cx + pr.x*scale;
+      const sy = cy + pr.y*scale;
 
-        const pr = project(x,y,z, rotY, rotX);
-        const sx = cx + pr.x*scale;
-        const sy = cy + pr.y*scale;
+      const a = clamp(0.20 + 0.60*blink, 0.12, 0.92) * pr.p;
+      const r0 = l.r*(0.9 + pr.p*0.35);
 
-        const glow = 0.55 + 0.45*Math.sin(t*3.0 + o.phase);
-        ctx.globalAlpha = (0.75*glow) * (1-transition);
-
-        // bauble
-        ctx.fillStyle = o.c;
-        ctx.beginPath(); ctx.arc(sx, sy, o.r*(0.75+pr.p*0.25), 0, Math.PI*2); ctx.fill();
-
-        // highlight
-        ctx.globalAlpha *= 0.45;
-        ctx.fillStyle = "rgba(255,255,255,0.85)";
-        ctx.beginPath(); ctx.arc(sx - o.r*0.25, sy - o.r*0.25, o.r*0.35, 0, Math.PI*2); ctx.fill();
-
-        // outer glow
-        ctx.globalAlpha *= 0.55;
-        ctx.fillStyle = o.c;
-        ctx.beginPath(); ctx.arc(sx, sy, o.r*2.2, 0, Math.PI*2); ctx.fill();
-      }
-      ctx.globalAlpha = 1;
-    }
-
-    // Candy canes - tree mode
-    if(transition < 0.98){
-      ctx.globalCompositeOperation = "lighter";
-      ctx.lineWidth = 3;
-      for(const cc of candyCanes){
-        const wig = Math.sin(t*2.4 + cc.phase)*0.02;
-        const x = cc.nx*(1+wig);
-        const y = (cc.ny - 0.5) * 1.44;
-        const z = cc.nz*(1+wig);
-
-        const pr = project(x,y,z, rotY, rotX);
-        const sx = cx + pr.x*scale;
-        const sy = cy + pr.y*scale;
-
-        const len = cc.len*(0.9+pr.p*0.35);
-        const ang = Math.sin(t*1.2 + cc.phase)*0.6;
-
-        ctx.globalAlpha = 0.85*(1-transition);
-        // white stick
-        ctx.strokeStyle = "rgba(255,255,255,0.92)";
-        ctx.beginPath();
-        ctx.moveTo(sx, sy);
-        ctx.lineTo(sx + Math.cos(ang)*len, sy + Math.sin(ang)*len);
-        ctx.stroke();
-        // red stripes (short)
-        ctx.globalAlpha *= 0.7;
-        ctx.strokeStyle = "rgba(255,77,109,0.9)";
-        ctx.beginPath();
-        ctx.moveTo(sx + Math.cos(ang)*len*0.25, sy + Math.sin(ang)*len*0.25);
-        ctx.lineTo(sx + Math.cos(ang)*len*0.45, sy + Math.sin(ang)*len*0.45);
-        ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-    }
-
-    // Gifts at bottom - tree mode
-    if(transition < 0.98){
-      ctx.globalCompositeOperation = "source-over";
-      const baseX = cx;
-      const baseY = cy + scale*0.58;
-      for(const g of gifts){
-        const x = baseX + g.x*scale;
-        const y = baseY + (g.y-0.80)*scale*0.15;
-        const ww = g.w*scale;
-        const hh = g.h*scale;
-
-        // box
-        ctx.globalAlpha = 0.95*(1-transition);
-        ctx.fillStyle = g.c;
-        ctx.beginPath();
-        ctx.roundRect(x-ww/2, y-hh/2, ww, hh, 14);
-        ctx.fill();
-
-        // ribbon
-        ctx.globalAlpha *= 0.7;
-        ctx.fillStyle = "rgba(255,255,255,0.45)";
-        ctx.fillRect(x-ww*0.07, y-hh/2, ww*0.14, hh);
-        ctx.fillRect(x-ww/2, y-hh*0.07, ww, hh*0.14);
-      }
-      ctx.globalAlpha = 1;
-    }
-
-    // bursts
-    ctx.globalCompositeOperation = "lighter";
-    for(let i=bursts.length-1;i>=0;i--){
-      const b = bursts[i];
-      b.life -= 1;
-      b.x += b.vx; b.y += b.vy;
-      b.vx *= 0.985; b.vy *= 0.985;
-      b.vy += 0.02;
-
-      const a = Math.max(0, b.life/60);
       ctx.globalAlpha = a;
-      ctx.fillStyle = b.c;
-      ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill();
-      if(b.life<=0) bursts.splice(i,1);
+      ctx.fillStyle = l.c;
+      ctx.beginPath(); ctx.arc(sx,sy,r0,0,Math.PI*2); ctx.fill();
+
+      ctx.globalAlpha = a*0.35;
+      ctx.beginPath(); ctx.arc(sx,sy,r0*4.2,0,Math.PI*2); ctx.fill();
     }
 
-    // floating text
-    ctx.globalCompositeOperation = "source-over";
-    for(let i=textPops.length-1;i>=0;i--){
-      const tp = textPops[i];
-      tp.life -= 1;
-      tp.y += tp.vy;
-      const a = Math.max(0, tp.life/70);
-      ctx.globalAlpha = a;
-      ctx.font = "900 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-      ctx.fillStyle = "rgba(255,255,255,0.92)";
-      ctx.shadowColor = "rgba(125,249,255,0.55)";
-      ctx.shadowBlur = 18;
-      ctx.fillText(tp.txt, tp.x - 155, tp.y);
-      ctx.shadowBlur = 0;
-      if(tp.life<=0) textPops.splice(i,1);
+    // ornaments (baubles)
+    for(const o of ornaments){
+      const bob = Math.sin(t*2.2 + o.phase)*0.02;
+      const x = o.nx*(1+bob);
+      const y = (o.ny - 0.5) * 1.44;
+      const z = o.nz*(1+bob);
+
+      const pr = project(x,y,z, rotY, rotX);
+      const sx = cx + pr.x*scale;
+      const sy = cy + pr.y*scale;
+
+      const glow = 0.55 + 0.45*Math.sin(t*3.0 + o.phase);
+      ctx.globalAlpha = 0.65*glow;
+
+      ctx.fillStyle = o.c;
+      ctx.beginPath(); ctx.arc(sx, sy, o.r*(0.75+pr.p*0.25), 0, Math.PI*2); ctx.fill();
+
+      ctx.globalAlpha *= 0.45;
+      ctx.fillStyle = "rgba(255,255,255,0.85)";
+      ctx.beginPath(); ctx.arc(sx - o.r*0.25, sy - o.r*0.25, o.r*0.35, 0, Math.PI*2); ctx.fill();
+
+      ctx.globalAlpha *= 0.55;
+      ctx.fillStyle = o.c;
+      ctx.beginPath(); ctx.arc(sx, sy, o.r*2.2, 0, Math.PI*2); ctx.fill();
     }
+    ctx.globalAlpha = 1;
 
     // base glow
     ctx.globalAlpha = 0.55;
-    const bg = ctx.createRadialGradient(cx, cy+scale*0.58, 0, cx, cy+scale*0.58, scale*0.44);
-    bg.addColorStop(0, `rgba(125,249,255,${0.10*(1-transition)+0.06})`);
-    bg.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = bg;
+    const base = ctx.createRadialGradient(cx, cy+scale*0.58, 0, cx, cy+scale*0.58, scale*0.44);
+    base.addColorStop(0, "rgba(125,249,255,0.10)");
+    base.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = base;
     ctx.beginPath(); ctx.arc(cx, cy+scale*0.58, scale*0.44, 0, Math.PI*2); ctx.fill();
-
     ctx.globalAlpha = 1;
+
     ctx.globalCompositeOperation = "source-over";
+
+    // =============================
+    // Update clickable hotspots positions
+    // (project their 3D coords to screen)
+    // =============================
+    // Bell
+    {
+      const d = decos.bell;
+      const pr = project(d.nx, (d.ny - 0.5)*1.44, d.nz, rotY, rotX);
+      const sx = cx + pr.x*scale;
+      const sy = cy + pr.y*scale;
+      // only show if it's in front-ish
+      const visible = pr.p > 0.68;
+      setHotspot(hsBell, sx, sy, visible);
+    }
+    // Gift
+    {
+      const d = decos.gift;
+      const pr = project(d.nx, (d.ny - 0.5)*1.44, d.nz, rotY, rotX);
+      const sx = cx + pr.x*scale;
+      const sy = cy + pr.y*scale;
+      const visible = pr.p > 0.68;
+      setHotspot(hsGift, sx, sy, visible);
+    }
 
     requestAnimationFrame(frame);
   }
-  requestAnimationFrame(frame);
 
+  requestAnimationFrame(frame);
 })();
 </script>
 </body>
