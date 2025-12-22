@@ -3,26 +3,26 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Merry Christmas - Particle Tree</title>
+  <title>Merry Christmas - Particle Tree (Enhanced)</title>
   <style>
     :root{
-      --bg:#050814;
+      --bg1:#050814;
+      --bg2:#0a1436;
       --fg:#eaf2ff;
       --gold:#ffef9a;
       --glow:#7df9ff;
     }
     *{box-sizing:border-box}
-    html,body{height:100%; margin:0; overflow:hidden; background:var(--bg); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
-    canvas{position:fixed; inset:0}
+    html,body{height:100%;margin:0;overflow:hidden;background:var(--bg1);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    canvas{position:fixed;inset:0}
 
-    /* top title */
     .top{
       position:fixed; top:16px; left:0; right:0;
       display:flex; justify-content:center; pointer-events:none;
       z-index:6;
       text-transform:uppercase;
       letter-spacing:2px;
-      font-weight:900;
+      font-weight:950;
       color:rgba(255,239,154,.95);
       text-shadow:0 0 18px rgba(255,239,154,.25), 0 18px 40px rgba(0,0,0,.55);
     }
@@ -34,158 +34,75 @@
       backdrop-filter: blur(10px);
     }
 
-    /* hint */
-    .hint{
-      position:fixed; bottom:16px; left:16px;
-      z-index:6;
-      color:rgba(234,242,255,.82);
+    .hud{
+      position:fixed; left:16px; bottom:16px; z-index:8;
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+      color:rgba(234,242,255,.86);
       font-size:13px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.12);
+      user-select:none;
+    }
+    .btn{
+      cursor:pointer;
+      border:none;
+      border-radius:999px;
+      padding:10px 12px;
+      color:var(--fg);
+      font-weight:900;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.16);
+      backdrop-filter: blur(10px);
+      box-shadow:0 18px 40px rgba(0,0,0,.35);
+      transition:transform .15s ease, opacity .15s ease;
+    }
+    .btn:hover{ transform: translateY(-1px); opacity:1; }
+    .tip{
       padding:10px 12px;
       border-radius:14px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
       backdrop-filter: blur(10px);
       box-shadow:0 18px 40px rgba(0,0,0,.35);
-      user-select:none;
+      max-width:min(520px, 92vw);
     }
 
-    /* small cards (gallery) */
-    .cards{
-      position:fixed;
-      left:50%;
-      top:50%;
-      transform:translate(-50%,-50%);
-      display:flex;
-      gap:22px;
-      z-index:7;
-      opacity:0;
-      pointer-events:none;
-      transition:opacity .55s ease, transform .55s ease;
-    }
-    .cards.show{
-      opacity:1;
-      pointer-events:auto;
-      transform:translate(-50%,-50%) scale(1);
-    }
-    .card{
-      width:92px; height:92px;
-      border-radius:12px;
-      overflow:hidden;
-      border:2px solid rgba(255,239,154,.75);
-      background:rgba(255,255,255,.05);
-      box-shadow:0 18px 50px rgba(0,0,0,.45);
-      cursor:pointer;
-      position:relative;
-      transform:translateY(6px);
-      transition:transform .18s ease, filter .18s ease;
-    }
-    .card:hover{ transform:translateY(0); filter:drop-shadow(0 0 18px rgba(255,239,154,.25)); }
-    .card img{ width:100%; height:100%; object-fit:cover; display:block; }
-
-    /* lightbox */
-    .lightbox{
-      position:fixed; inset:0;
-      z-index:10;
-      display:none;
-      place-items:center;
-      background:rgba(0,0,0,.55);
-      backdrop-filter: blur(6px);
-    }
-    .lightbox.show{ display:grid; }
-    .viewer{
-      width:min(520px, 92vw);
-      aspect-ratio: 1/1;
-      border-radius:18px;
-      overflow:hidden;
-      border:3px solid rgba(255,239,154,.75);
-      box-shadow:0 40px 120px rgba(0,0,0,.6);
-      background:#0b1230;
-      position:relative;
-      touch-action:none;
-    }
-    .viewer img{
-      position:absolute; left:50%; top:50%;
-      transform:translate(-50%,-50%) scale(1);
-      transform-origin:center;
-      user-select:none;
-      -webkit-user-drag:none;
-      width:100%; height:100%;
-      object-fit:cover;
-    }
-    .close{
-      position:fixed; top:16px; right:16px; z-index:11;
-      border:none; cursor:pointer;
-      padding:10px 12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.16);
-      color:var(--fg);
-      font-weight:900;
-      backdrop-filter: blur(10px);
-      box-shadow:0 18px 40px rgba(0,0,0,.35);
-    }
-    .tools{
-      position:fixed; bottom:16px; right:16px; z-index:11;
-      display:flex; gap:10px;
-    }
-    .toolbtn{
-      border:none; cursor:pointer;
-      padding:10px 12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.16);
-      color:var(--fg);
-      font-weight:900;
-      backdrop-filter: blur(10px);
-      box-shadow:0 18px 40px rgba(0,0,0,.35);
-    }
+    /* Optional MP3 audio element (hidden) */
+    audio{ display:none; }
   </style>
 </head>
 <body>
   <canvas id="c"></canvas>
-
   <div class="top"><span>MERRY CHRISTMAS</span></div>
-  <div class="hint">Click cây thông để chuyển cảnh • Click ảnh để phóng to • Zoom: lăn chuột / pinch</div>
 
-  <div class="cards" id="cards">
-    <div class="card" data-id="1"><img id="img1" alt="photo 1"></div>
-    <div class="card" data-id="2"><img id="img2" alt="photo 2"></div>
+  <div class="hud">
+    <button class="btn" id="toggleScene">🎄/✨ Chuyển cảnh</button>
+    <button class="btn" id="musicBtn">▶️ Play nhạc</button>
+    <button class="btn" id="paletteBtn">🎨 Đổi màu</button>
+    <div class="tip">Kéo chuột để xoay nhẹ • Click để “burst sparkle” • Nhạc: chạy ngay bằng WebAudio (hoặc bạn có thể dùng MP3 riêng)</div>
   </div>
 
-  <div class="lightbox" id="lightbox" aria-hidden="true">
-    <button class="close" id="closeBtn">✕</button>
-    <div class="viewer" id="viewer">
-      <img id="bigImg" alt="big photo">
-    </div>
-    <div class="tools">
-      <button class="toolbtn" id="zoomOut">−</button>
-      <button class="toolbtn" id="zoomReset">Reset</button>
-      <button class="toolbtn" id="zoomIn">+</button>
-    </div>
-  </div>
+  <!-- Nếu bạn muốn dùng nhạc MP3 của bạn:
+       1) Tạo thư mục assets/ và đặt file: assets/christmas.mp3
+       2) Bỏ comment audio dưới + đổi musicMode trong JS thành "mp3"
+  -->
+  <!-- <audio id="mp3" src="assets/christmas.mp3" loop></audio> -->
 
 <script>
 (() => {
-  // ========= IMAGES (Bạn thay ảnh ở đây) =========
-  // Cách thay: đổi URL ở dưới thành link ảnh của bạn (hoặc đặt ảnh vào thư mục assets rồi dùng "assets/tenanh.jpg")
-  const PHOTO_1 = "https://images.unsplash.com/photo-1544785349-c4a5301826fd?auto=format&fit=crop&w=900&q=80";
-  const PHOTO_2 = "https://images.unsplash.com/photo-1512389142860-9c449e58a543?auto=format&fit=crop&w=900&q=80";
-
-  document.getElementById("img1").src = PHOTO_1;
-  document.getElementById("img2").src = PHOTO_2;
-
-  // ========= CANVAS / PARTICLES =========
+  // ===============================
+  // 0) CONFIG
+  // ===============================
   const canvas = document.getElementById('c');
   const ctx = canvas.getContext('2d', { alpha:false });
-  let w=0,h=0,dpr=1;
 
+  let W=0,H=0,DPR=1;
   function resize(){
-    dpr = Math.min(2, devicePixelRatio || 1);
-    w = canvas.width = Math.floor(innerWidth * dpr);
-    h = canvas.height = Math.floor(innerHeight * dpr);
-    canvas.style.width = innerWidth + "px";
-    canvas.style.height = innerHeight + "px";
-    ctx.setTransform(dpr,0,0,dpr,0,0);
+    DPR = Math.min(2, devicePixelRatio || 1);
+    canvas.width  = Math.floor(innerWidth * DPR);
+    canvas.height = Math.floor(innerHeight * DPR);
+    canvas.style.width = innerWidth + 'px';
+    canvas.style.height = innerHeight + 'px';
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    W = innerWidth; H = innerHeight;
   }
   addEventListener('resize', resize, {passive:true});
   resize();
@@ -193,48 +110,117 @@
   const rand=(a,b)=>Math.random()*(b-a)+a;
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
-  // States: "tree" -> "galaxy"
+  // palettes
+  const palettes = [
+    {bg1:'#050814', bg2:'#0a1436', cols:['#ffef9a','#ffd166','#ff9f1c','#ff4d6d','#b388ff','#7df9ff','#a7ff83','#ffffff']},
+    {bg1:'#02030a', bg2:'#071b2a', cols:['#ffffff','#00d1ff','#00ff87','#ffe66d','#c77dff','#ff4d6d','#7df9ff']},
+    {bg1:'#050814', bg2:'#1a0a2a', cols:['#ff9bd3','#7df9ff','#ffd166','#ffffff','#4cc9f0','#b388ff']}
+  ];
+  let palIndex = 0;
+
+  // Scene states: tree -> galaxy
   let state = "tree";
   let transition = 0; // 0..1
 
-  // palette like video (gold & warm particles)
-  const cols = ["#ffef9a","#ffd166","#ff9f1c","#ff4d6d","#b388ff","#7df9ff","#a7ff83","#ffffff"];
+  // Mouse parallax rotation
+  let mx=W/2, my=H/2;
+  addEventListener('pointermove', e => { mx=e.clientX; my=e.clientY; }, {passive:true});
 
-  // Create TREE particles (cone + sparkle)
+  // ===============================
+  // 1) SHAPES & PARTICLES
+  // ===============================
+  // Snow
+  const snow = [];
+  function initSnow(){
+    snow.length=0;
+    const n = Math.min(260, Math.floor(W/3));
+    for(let i=0;i<n;i++){
+      snow.push({x:rand(0,W), y:rand(0,H), r:rand(0.7,2.4), v:rand(0.6,2.2), s:rand(-0.6,0.6), w:rand(0,Math.PI*2)});
+    }
+  }
+  initSnow();
+
+  // Tree particles (MAIN)
   const tree = [];
-  const N_TREE = 1800;
+  const ornaments = []; // bigger particles for decorations
+  const candyCanes = []; // small "stick" decorations
+  const gifts = []; // bottom gifts particles
+  const N_TREE = 1900;
 
   function initTree(){
     tree.length = 0;
+    ornaments.length = 0;
+    candyCanes.length = 0;
+    gifts.length = 0;
+
+    const cols = palettes[palIndex].cols;
+
+    // MAIN TREE: corrected orientation (TOP -> BOTTOM)
+    // t = 0 at top, t = 1 at bottom
     for(let i=0;i<N_TREE;i++){
-      const t = i / (N_TREE-1);          // 0..1 bottom-ish
-      const y = 1 - t;                   // top = 1
-      const radius = (0.04 + 0.55*(1-y)) * (0.92 + 0.08*Math.sin(t*10));
-      const turns = 14;
+      const t = i / (N_TREE-1);
+      const radius = (0.04 + 0.58*t) * (0.94 + 0.06*Math.sin(t*9.5)); // grows downwards
+      const turns = 14.5;
       const ang = t * Math.PI * 2 * turns + rand(-0.35,0.35);
 
       const nx = Math.cos(ang)*radius;
       const nz = Math.sin(ang)*radius;
-      const ny = y;
+      const ny = t; // 0..1
 
       tree.push({
         nx, ny, nz,
-        size: rand(0.6, 2.2),
+        size: rand(0.6, 2.3),
         phase: rand(0, Math.PI*2),
-        spd: rand(0.8, 1.9),
+        spd: rand(0.8, 2.0),
         c: cols[Math.floor(rand(0, cols.length))],
         tw: rand(0.35, 1.0),
-        // will be used in galaxy mode
+        // galaxy motion params
         gx: rand(-1,1),
         gy: rand(-1,1),
-        gvx: rand(-0.25,0.25),
-        gvy: rand(-0.25,0.25),
+        gvx: rand(-0.22,0.22),
+        gvy: rand(-0.22,0.22),
       });
     }
+
+    // Ornaments (baubles) positioned on tree
+    const ornamentColors = ['#ff4d6d','#ffd166','#4cc9f0','#a7ff83','#b388ff','#ffffff'];
+    const ornamentCount = 14;
+    for(let i=0;i<ornamentCount;i++){
+      const t = rand(0.18, 0.92);
+      const radius = 0.06 + 0.50*t;
+      const ang = rand(0, Math.PI*2);
+      ornaments.push({
+        nx: Math.cos(ang)*radius,
+        nz: Math.sin(ang)*radius,
+        ny: t,
+        r: rand(3.2, 6.2),
+        c: ornamentColors[i % ornamentColors.length],
+        phase: rand(0, Math.PI*2)
+      });
+    }
+
+    // Candy canes (small sticks)
+    for(let i=0;i<8;i++){
+      const t = rand(0.22, 0.88);
+      const radius = 0.05 + 0.52*t;
+      const ang = rand(0, Math.PI*2);
+      candyCanes.push({
+        nx: Math.cos(ang)*radius,
+        nz: Math.sin(ang)*radius,
+        ny: t,
+        len: rand(10, 18),
+        phase: rand(0, Math.PI*2)
+      });
+    }
+
+    // Gifts at bottom (2 boxes)
+    gifts.push({x:-0.18, y:0.78, w:0.14, h:0.10, c:'#ff4d6d'});
+    gifts.push({x: 0.14, y:0.80, w:0.13, h:0.09, c:'#4cc9f0'});
+    gifts.push({x:-0.02, y:0.83, w:0.12, h:0.085, c:'#ffd166'});
   }
   initTree();
 
-  // simple projection (fake 3D)
+  // ========= fake 3D projection =========
   function project(x,y,z, rotY, rotX){
     const cy=Math.cos(rotY), sy=Math.sin(rotY);
     let xx = x*cy + z*sy;
@@ -244,73 +230,215 @@
     let yy = y*cx - zz*sx;
     zz = y*sx + zz*cx;
 
-    const dist = 2.25;
+    const dist = 2.30;
     const p = dist / (dist + zz);
     return { x: xx*p, y: yy*p, p };
   }
 
-  // mouse parallax rotation
-  let mx=innerWidth/2, my=innerHeight/2;
-  addEventListener('pointermove', e => { mx=e.clientX; my=e.clientY; }, {passive:true});
-
-  // click to transition
-  addEventListener('click', () => {
-    if(state === "tree"){
-      state = "galaxy";
-    }
-  });
-
-  // Draw star
-  function drawStar(cx, cy, R, r){
+  // ========= Star shape =========
+  function drawStar(x,y,R,r){
     ctx.beginPath();
     for(let i=0;i<10;i++){
       const a = -Math.PI/2 + i*(Math.PI/5);
       const rr = (i%2===0)?R:r;
-      ctx.lineTo(cx + Math.cos(a)*rr, cy + Math.sin(a)*rr);
+      ctx.lineTo(x + Math.cos(a)*rr, y + Math.sin(a)*rr);
     }
-    ctx.closePath();
-    ctx.fill();
+    ctx.closePath(); ctx.fill();
   }
 
-  // ===== cards show after transition =====
-  const cards = document.getElementById('cards');
+  // ========= Floating text =========
+  const textPops = [];
+  function spawnText(x,y,txt){
+    textPops.push({x,y,vy:rand(-1.6,-1.1), life:70, txt});
+  }
 
-  // ===== render loop =====
-  let last = performance.now();
+  // ========= Burst sparkle =========
+  const bursts = [];
+  addEventListener('click', (e)=>{
+    // add burst
+    const cols = palettes[palIndex].cols;
+    for(let i=0;i<140;i++){
+      bursts.push({
+        x:e.clientX, y:e.clientY,
+        vx:rand(-2.2,2.2),
+        vy:rand(-2.2,2.2),
+        life:rand(22,60),
+        r:rand(1.2,3.2),
+        c: cols[i % cols.length]
+      });
+    }
+    spawnText(e.clientX, e.clientY, "Merry Christmas ✨");
+  });
+
+  // ===============================
+  // 2) SCENE CONTROLS
+  // ===============================
+  document.getElementById('toggleScene').addEventListener('click', ()=>{
+    state = (state === "tree") ? "galaxy" : "tree";
+  });
+  document.getElementById('paletteBtn').addEventListener('click', ()=>{
+    palIndex = (palIndex+1) % palettes.length;
+    initTree();
+  });
+
+  // ===============================
+  // 3) MUSIC
+  // ===============================
+  // musicMode:
+  // - "webaudio": chạy ngay (không cần file)
+  // - "mp3": dùng <audio id="mp3"> (bạn tự cung cấp file nhạc)
+  let musicMode = "webaudio"; // đổi thành "mp3" nếu bạn dùng file mp3 của bạn
+
+  let audioCtx=null, master=null, isPlaying=false, timer=null;
+  const musicBtn = document.getElementById('musicBtn');
+
+  // giai điệu vui kiểu Noel (không phải bản ghi bài hát)
+  const song = [
+    {f:659.25,d:.20},{f:659.25,d:.20},{f:659.25,d:.28},
+    {f:659.25,d:.20},{f:659.25,d:.20},{f:659.25,d:.28},
+    {f:659.25,d:.20},{f:783.99,d:.20},{f:523.25,d:.20},{f:587.33,d:.20},{f:659.25,d:.46},
+    {f:698.46,d:.20},{f:698.46,d:.20},{f:698.46,d:.20},{f:698.46,d:.20},{f:698.46,d:.20},
+    {f:659.25,d:.20},{f:659.25,d:.20},{f:659.25,d:.20},
+    {f:659.25,d:.20},{f:587.33,d:.20},{f:587.33,d:.20},{f:659.25,d:.20},{f:587.33,d:.30},{f:783.99,d:.34},
+    {f:0,d:.24},
+  ];
+
+  function ensureAudio(){
+    if(audioCtx) return;
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    master = audioCtx.createGain();
+    master.gain.value = 0.16;
+    master.connect(audioCtx.destination);
+  }
+  function playNote(freq, start, dur){
+    if(freq<=0) return;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, start);
+
+    const a=0.01, r=0.08;
+    g.gain.setValueAtTime(0.0001, start);
+    g.gain.exponentialRampToValueAtTime(1.0, start+a);
+    g.gain.exponentialRampToValueAtTime(0.0001, start+Math.max(0.02,dur-r));
+
+    osc.connect(g); g.connect(master);
+    osc.start(start); osc.stop(start+dur);
+  }
+  function startSong(){
+    let idx=0;
+    let t=audioCtx.currentTime+0.05;
+    function sched(){
+      if(!isPlaying) return;
+      const ahead=0.7;
+      while(t < audioCtx.currentTime+ahead){
+        const n=song[idx];
+        playNote(n.f, t, n.d);
+        t += n.d;
+        idx=(idx+1)%song.length;
+        if(idx===0) t += 0.10;
+      }
+    }
+    sched();
+    timer=setInterval(sched, 80);
+  }
+  function stopSong(){
+    if(timer){ clearInterval(timer); timer=null; }
+  }
+
+  const mp3 = document.getElementById('mp3'); // may be null (if comment)
+  async function toggleMusic(){
+    if(musicMode==="mp3"){
+      if(!mp3){
+        alert("Bạn đang để musicMode='mp3' nhưng chưa bật thẻ <audio id='mp3'> ở HTML.");
+        return;
+      }
+      if(mp3.paused){
+        try{ await mp3.play(); }catch(e){ alert("Trình duyệt chặn autoplay. Bấm lại Play nhé."); }
+        musicBtn.textContent = "⏸️ Pause nhạc";
+        isPlaying = true;
+      }else{
+        mp3.pause();
+        musicBtn.textContent = "▶️ Play nhạc";
+        isPlaying = false;
+      }
+      return;
+    }
+
+    // webaudio
+    ensureAudio();
+    if(audioCtx.state === 'suspended'){
+      try{ await audioCtx.resume(); }catch(e){}
+    }
+    if(!isPlaying){
+      isPlaying=true;
+      musicBtn.textContent="⏸️ Pause nhạc";
+      startSong();
+      spawnText(W*0.5, H*0.22, "🎶 Merry Christmas!");
+    }else{
+      isPlaying=false;
+      musicBtn.textContent="▶️ Play nhạc";
+      stopSong();
+    }
+  }
+  musicBtn.addEventListener('click', toggleMusic);
+
+  // ===============================
+  // 4) RENDER LOOP
+  // ===============================
+  let last=performance.now();
   function frame(now){
     const dt = Math.min(40, now-last); last=now;
     const t = now*0.001;
 
-    // background
-    ctx.fillStyle = "#050814";
-    ctx.fillRect(0,0,innerWidth,innerHeight);
+    const pal = palettes[palIndex];
 
-    // fade trail like video "sparkle smear"
+    // background gradient
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0, pal.bg1);
+    g.addColorStop(1, pal.bg2);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+
+    // subtle motion trail (helps sparkle vibe)
     ctx.fillStyle = "rgba(0,0,0,0.12)";
-    ctx.fillRect(0,0,innerWidth,innerHeight);
+    ctx.fillRect(0,0,W,H);
 
-    // rotation from mouse
-    const nx = (mx - innerWidth/2) / innerWidth;
-    const ny = (my - innerHeight/2) / innerHeight;
-    const rotY = nx*1.15 + Math.sin(t*0.25)*0.12;
-    const rotX = -0.22 + ny*0.55;
+    // snow
+    ctx.globalAlpha = 0.92;
+    for(const s of snow){
+      s.w += 0.01 + s.r*0.002;
+      s.y += s.v;
+      s.x += s.s + Math.sin(s.w)*0.35;
+      if(s.y > H+10){ s.y=-10; s.x=rand(0,W); }
+      if(s.x < -10) s.x = W+10;
+      if(s.x > W+10) s.x = -10;
 
-    // transition easing if galaxy
-    if(state === "galaxy"){
-      transition = clamp(transition + dt/900, 0, 1);
-      if(transition > 0.6) cards.classList.add("show");
-    }else{
-      transition = clamp(transition - dt/900, 0, 1);
-      cards.classList.remove("show");
+      ctx.beginPath();
+      ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle = "rgba(255,255,255,0.92)";
+      ctx.fill();
     }
 
-    // center & scale
-    const cx = innerWidth*0.5;
-    const cy = innerHeight*0.55;
-    const scale = Math.min(innerWidth, innerHeight)*0.55;
+    // transition
+    if(state==="galaxy"){
+      transition = clamp(transition + dt/900, 0, 1);
+    }else{
+      transition = clamp(transition - dt/900, 0, 1);
+    }
 
-    // Star + title vibe (only strong in tree mode)
-    const starY = cy - scale*0.57;
+    // rotate from mouse
+    const nx = (mx - W/2) / W;
+    const ny = (my - H/2) / H;
+    const rotY = nx*1.15 + Math.sin(t*0.25)*0.12;
+    const rotX = -0.18 + ny*0.55;
+
+    const cx = W*0.5;
+    const cy = H*0.56;
+    const scale = Math.min(W,H)*0.55;
+
+    // star (top) - only strong in tree mode
+    const starY = cy - scale*0.60;
     const starGlow = (1-transition);
     if(starGlow > 0.02){
       ctx.globalCompositeOperation = "lighter";
@@ -325,24 +453,54 @@
       ctx.globalCompositeOperation = "source-over";
     }
 
-    // particles
+    // trunk + base in tree mode
+    if(transition < 0.98){
+      ctx.globalAlpha = 0.9*(1-transition);
+      ctx.fillStyle = "rgba(100,60,44,0.9)";
+      const tw = scale*0.10, th = scale*0.20;
+      ctx.beginPath();
+      ctx.roundRect(cx - tw/2, cy + scale*0.33, tw, th, scale*0.03);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    // garland (sparkly arc lines) - tree mode
+    if(transition < 0.95){
+      ctx.globalCompositeOperation = "lighter";
+      const garA = (1-transition)*0.55;
+      ctx.globalAlpha = garA;
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(255,255,255,0.22)";
+      for(let k=0;k<3;k++){
+        const yy = cy + scale*(-0.15 + k*0.20);
+        const ww = scale*(0.38 + k*0.10);
+        ctx.beginPath();
+        ctx.ellipse(cx, yy, ww, scale*0.10, 0, 0, Math.PI);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = "source-over";
+    }
+
+    // MAIN particles
     ctx.globalCompositeOperation = "lighter";
 
+    const cols = pal.cols;
     for(const p of tree){
-      // wobble sparkle
+      // sparkle pulse
       const pulse = 0.55 + 0.45*Math.sin(t*2.1 + p.phase);
       const tw = p.tw*pulse;
 
-      // TREE position (cone)
+      // TREE position (correct orientation):
+      // ny=t (0..1): map to y in [-0.72 .. +0.72]
       const wob = Math.sin(t*p.spd + p.phase) * 0.06;
       const tx = p.nx*(1+wob);
-      const ty = (p.ny-0.5)*1.28;
+      const ty = (p.ny - 0.5) * 1.44;   // TOP is negative, BOTTOM is positive ✅
       const tz = p.nz*(1+wob);
 
-      // GALAXY position (2D swirl)
+      // GALAXY position
       p.gx += p.gvx*dt*0.001;
       p.gy += p.gvy*dt*0.001;
-      // keep in soft bounds
       if(p.gx<-1||p.gx>1) p.gvx*=-1;
       if(p.gy<-1||p.gy>1) p.gvy*=-1;
 
@@ -350,7 +508,6 @@
       const gx = p.gx + Math.cos(t*0.35 + p.phase)*0.08;
       const gy = p.gy + Math.sin(t*0.35 + p.phase)*0.08;
 
-      // mix tree -> galaxy
       const mix = transition;
       const x = tx*(1-mix) + gx*1.05*mix;
       const y = ty*(1-mix) + gy*0.85*mix;
@@ -363,122 +520,156 @@
       const a = clamp((0.10 + tw)*pr.p, 0.06, 0.95);
       const r0 = (p.size*1.05) * (0.65 + pr.p);
 
-      // dot
       ctx.globalAlpha = a;
       ctx.fillStyle = p.c;
       ctx.beginPath(); ctx.arc(sx, sy, r0, 0, Math.PI*2); ctx.fill();
 
-      // soft glow
-      ctx.globalAlpha = a*0.28;
-      ctx.beginPath(); ctx.arc(sx, sy, r0*3.1, 0, Math.PI*2); ctx.fill();
+      ctx.globalAlpha = a*0.26;
+      ctx.beginPath(); ctx.arc(sx, sy, r0*3.0, 0, Math.PI*2); ctx.fill();
+    }
+
+    // ORNAMENTS (baubles) - tree mode only
+    if(transition < 0.98){
+      ctx.globalCompositeOperation = "lighter";
+      for(const o of ornaments){
+        const bob = Math.sin(t*2.2 + o.phase)*0.02;
+        const x = o.nx*(1+bob);
+        const y = (o.ny - 0.5) * 1.44;
+        const z = o.nz*(1+bob);
+
+        const pr = project(x,y,z, rotY, rotX);
+        const sx = cx + pr.x*scale;
+        const sy = cy + pr.y*scale;
+
+        const glow = 0.55 + 0.45*Math.sin(t*3.0 + o.phase);
+        ctx.globalAlpha = (0.75*glow) * (1-transition);
+
+        // bauble
+        ctx.fillStyle = o.c;
+        ctx.beginPath(); ctx.arc(sx, sy, o.r*(0.75+pr.p*0.25), 0, Math.PI*2); ctx.fill();
+
+        // highlight
+        ctx.globalAlpha *= 0.45;
+        ctx.fillStyle = "rgba(255,255,255,0.85)";
+        ctx.beginPath(); ctx.arc(sx - o.r*0.25, sy - o.r*0.25, o.r*0.35, 0, Math.PI*2); ctx.fill();
+
+        // outer glow
+        ctx.globalAlpha *= 0.55;
+        ctx.fillStyle = o.c;
+        ctx.beginPath(); ctx.arc(sx, sy, o.r*2.2, 0, Math.PI*2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // Candy canes - tree mode
+    if(transition < 0.98){
+      ctx.globalCompositeOperation = "lighter";
+      ctx.lineWidth = 3;
+      for(const cc of candyCanes){
+        const wig = Math.sin(t*2.4 + cc.phase)*0.02;
+        const x = cc.nx*(1+wig);
+        const y = (cc.ny - 0.5) * 1.44;
+        const z = cc.nz*(1+wig);
+
+        const pr = project(x,y,z, rotY, rotX);
+        const sx = cx + pr.x*scale;
+        const sy = cy + pr.y*scale;
+
+        const len = cc.len*(0.9+pr.p*0.35);
+        const ang = Math.sin(t*1.2 + cc.phase)*0.6;
+
+        ctx.globalAlpha = 0.85*(1-transition);
+        // white stick
+        ctx.strokeStyle = "rgba(255,255,255,0.92)";
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(sx + Math.cos(ang)*len, sy + Math.sin(ang)*len);
+        ctx.stroke();
+        // red stripes (short)
+        ctx.globalAlpha *= 0.7;
+        ctx.strokeStyle = "rgba(255,77,109,0.9)";
+        ctx.beginPath();
+        ctx.moveTo(sx + Math.cos(ang)*len*0.25, sy + Math.sin(ang)*len*0.25);
+        ctx.lineTo(sx + Math.cos(ang)*len*0.45, sy + Math.sin(ang)*len*0.45);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // Gifts at bottom - tree mode
+    if(transition < 0.98){
+      ctx.globalCompositeOperation = "source-over";
+      const baseX = cx;
+      const baseY = cy + scale*0.58;
+      for(const g of gifts){
+        const x = baseX + g.x*scale;
+        const y = baseY + (g.y-0.80)*scale*0.15;
+        const ww = g.w*scale;
+        const hh = g.h*scale;
+
+        // box
+        ctx.globalAlpha = 0.95*(1-transition);
+        ctx.fillStyle = g.c;
+        ctx.beginPath();
+        ctx.roundRect(x-ww/2, y-hh/2, ww, hh, 14);
+        ctx.fill();
+
+        // ribbon
+        ctx.globalAlpha *= 0.7;
+        ctx.fillStyle = "rgba(255,255,255,0.45)";
+        ctx.fillRect(x-ww*0.07, y-hh/2, ww*0.14, hh);
+        ctx.fillRect(x-ww/2, y-hh*0.07, ww, hh*0.14);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // bursts
+    ctx.globalCompositeOperation = "lighter";
+    for(let i=bursts.length-1;i>=0;i--){
+      const b = bursts[i];
+      b.life -= 1;
+      b.x += b.vx; b.y += b.vy;
+      b.vx *= 0.985; b.vy *= 0.985;
+      b.vy += 0.02;
+
+      const a = Math.max(0, b.life/60);
+      ctx.globalAlpha = a;
+      ctx.fillStyle = b.c;
+      ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill();
+      if(b.life<=0) bursts.splice(i,1);
+    }
+
+    // floating text
+    ctx.globalCompositeOperation = "source-over";
+    for(let i=textPops.length-1;i>=0;i--){
+      const tp = textPops[i];
+      tp.life -= 1;
+      tp.y += tp.vy;
+      const a = Math.max(0, tp.life/70);
+      ctx.globalAlpha = a;
+      ctx.font = "900 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.fillStyle = "rgba(255,255,255,0.92)";
+      ctx.shadowColor = "rgba(125,249,255,0.55)";
+      ctx.shadowBlur = 18;
+      ctx.fillText(tp.txt, tp.x - 155, tp.y);
+      ctx.shadowBlur = 0;
+      if(tp.life<=0) textPops.splice(i,1);
     }
 
     // base glow
     ctx.globalAlpha = 0.55;
-    const bg = ctx.createRadialGradient(cx, cy+scale*0.52, 0, cx, cy+scale*0.52, scale*0.44);
-    bg.addColorStop(0, `rgba(125,249,255,${0.10*(1-transition)+0.07})`);
+    const bg = ctx.createRadialGradient(cx, cy+scale*0.58, 0, cx, cy+scale*0.58, scale*0.44);
+    bg.addColorStop(0, `rgba(125,249,255,${0.10*(1-transition)+0.06})`);
     bg.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = bg;
-    ctx.beginPath(); ctx.arc(cx, cy+scale*0.52, scale*0.44, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx, cy+scale*0.58, scale*0.44, 0, Math.PI*2); ctx.fill();
 
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = "source-over";
+
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
-
-  // ========= LIGHTBOX + ZOOM (mouse wheel / pinch) =========
-  const lightbox = document.getElementById("lightbox");
-  const bigImg = document.getElementById("bigImg");
-  const viewer = document.getElementById("viewer");
-
-  let zoom = 1, panX = 0, panY = 0;
-  let dragging=false, sx0=0, sy0=0, px0=0, py0=0;
-  let pinch=false, pinchDist0=0, zoom0=1;
-
-  function applyTransform(){
-    bigImg.style.transform = `translate(calc(-50% + ${panX}px), calc(-50% + ${panY}px)) scale(${zoom})`;
-  }
-  function openImg(src){
-    bigImg.src = src;
-    zoom = 1; panX = 0; panY = 0;
-    applyTransform();
-    lightbox.classList.add("show");
-    lightbox.setAttribute("aria-hidden","false");
-  }
-  function closeImg(){
-    lightbox.classList.remove("show");
-    lightbox.setAttribute("aria-hidden","true");
-  }
-
-  cards.addEventListener("click", (e)=>{
-    const card = e.target.closest(".card");
-    if(!card) return;
-    const id = card.getAttribute("data-id");
-    openImg(id==="1" ? PHOTO_1 : PHOTO_2);
-  });
-
-  document.getElementById("closeBtn").addEventListener("click", closeImg);
-  lightbox.addEventListener("click", (e)=>{ if(e.target === lightbox) closeImg(); });
-
-  // Buttons
-  document.getElementById("zoomIn").addEventListener("click", ()=>{ zoom = clamp(zoom*1.15, 1, 4); applyTransform(); });
-  document.getElementById("zoomOut").addEventListener("click", ()=>{ zoom = clamp(zoom/1.15, 1, 4); applyTransform(); });
-  document.getElementById("zoomReset").addEventListener("click", ()=>{ zoom=1; panX=0; panY=0; applyTransform(); });
-
-  // Mouse wheel zoom
-  viewer.addEventListener("wheel", (e)=>{
-    e.preventDefault();
-    const dir = Math.sign(e.deltaY);
-    const factor = dir > 0 ? 0.92 : 1.08;
-    zoom = clamp(zoom*factor, 1, 4);
-    applyTransform();
-  }, {passive:false});
-
-  // Drag to pan
-  viewer.addEventListener("pointerdown", (e)=>{
-    viewer.setPointerCapture(e.pointerId);
-    dragging = true;
-    sx0 = e.clientX; sy0 = e.clientY;
-    px0 = panX; py0 = panY;
-  });
-  viewer.addEventListener("pointermove", (e)=>{
-    if(!dragging || pinch) return;
-    panX = px0 + (e.clientX - sx0);
-    panY = py0 + (e.clientY - sy0);
-    applyTransform();
-  });
-  viewer.addEventListener("pointerup", ()=>{ dragging=false; });
-
-  // Touch pinch (2 fingers) using Pointer Events
-  const pointers = new Map();
-  viewer.addEventListener("pointerdown", (e)=>{ pointers.set(e.pointerId, e); if(pointers.size===2){ pinch=true; initPinch(); } });
-  viewer.addEventListener("pointermove", (e)=>{
-    if(!pointers.has(e.pointerId)) return;
-    pointers.set(e.pointerId, e);
-    if(pointers.size===2){
-      doPinch();
-    }
-  });
-  viewer.addEventListener("pointerup", (e)=>{ pointers.delete(e.pointerId); if(pointers.size<2){ pinch=false; } });
-  viewer.addEventListener("pointercancel", (e)=>{ pointers.delete(e.pointerId); if(pointers.size<2){ pinch=false; } });
-
-  function dist(a,b){
-    const dx=a.clientX-b.clientX, dy=a.clientY-b.clientY;
-    return Math.hypot(dx,dy);
-  }
-  function initPinch(){
-    const [a,b] = [...pointers.values()];
-    pinchDist0 = dist(a,b);
-    zoom0 = zoom;
-  }
-  function doPinch(){
-    const [a,b] = [...pointers.values()];
-    const d = dist(a,b);
-    const ratio = d / (pinchDist0 || d);
-    zoom = clamp(zoom0 * ratio, 1, 4);
-    applyTransform();
-  }
 
 })();
 </script>
