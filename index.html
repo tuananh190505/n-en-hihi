@@ -1,0 +1,922 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Noel - Cây thông (nhạc + hover hiện ảnh + chữ bay)</title>
+  <style>
+    :root{
+      --bg1:#050814;
+      --bg2:#0a1436;
+      --text:#eaf2ff;
+      --tree1:#0c6b3a;
+      --tree2:#0a5230;
+      --trunk:#6b3f2a;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--text);
+      overflow:hidden;
+      background:
+        radial-gradient(1200px 700px at 20% 20%, rgba(125,249,255,.12), transparent 60%),
+        radial-gradient(900px 600px at 80% 10%, rgba(255,190,200,.10), transparent 55%),
+        radial-gradient(1000px 800px at 50% 110%, rgba(70,120,255,.14), transparent 65%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+    }
+
+    /* nền sao */
+    .stars, .stars:before, .stars:after{
+      position:absolute; inset:0;
+      background-repeat: repeat;
+      background-size: 220px 220px;
+      pointer-events:none;
+      content:"";
+      opacity:.55;
+      filter: drop-shadow(0 0 2px rgba(255,255,255,.25));
+      background-image:
+        radial-gradient(2px 2px at 30px 40px, rgba(255,255,255,.9), transparent 60%),
+        radial-gradient(1px 1px at 120px 160px, rgba(255,255,255,.8), transparent 60%),
+        radial-gradient(1.5px 1.5px at 190px 70px, rgba(255,255,255,.85), transparent 60%),
+        radial-gradient(1px 1px at 80px 210px, rgba(255,255,255,.75), transparent 60%),
+        radial-gradient(1.5px 1.5px at 210px 210px, rgba(255,255,255,.8), transparent 60%);
+      animation: drift 24s linear infinite;
+    }
+    .stars:before{ opacity:.35; animation-duration: 38s; transform: scale(1.2); }
+    .stars:after{ opacity:.25; animation-duration: 60s; transform: scale(1.4); }
+    @keyframes drift{ from{ transform: translateY(0);} to{ transform: translateY(120px);} }
+
+    /* layout */
+    .wrap{
+      position:relative;
+      height:100vh;
+      display:grid;
+      place-items:center;
+      padding:24px;
+    }
+
+    header{
+      position:absolute;
+      top:18px; left:18px; right:18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      z-index:10;
+    }
+    .title{
+      font-weight:900;
+      letter-spacing:.6px;
+      text-shadow: 0 10px 34px rgba(0,0,0,.55);
+    }
+    .title small{
+      display:block;
+      font-weight:650;
+      opacity:.85;
+      letter-spacing:0;
+      margin-top:4px;
+    }
+
+    /* control */
+    .controls{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .btn{
+      user-select:none;
+      cursor:pointer;
+      border-radius:999px;
+      padding:10px 14px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.08);
+      backdrop-filter: blur(10px);
+      color: var(--text);
+      font-weight:700;
+      box-shadow: 0 18px 34px rgba(0,0,0,.25);
+      transition: transform .15s ease, opacity .15s ease;
+    }
+    .btn:hover{ transform: translateY(-1px); opacity:1; }
+    .note{
+      font-size:12px;
+      opacity:.75;
+      text-align:right;
+      max-width:280px;
+      line-height:1.25;
+      text-shadow: 0 10px 34px rgba(0,0,0,.55);
+    }
+
+    /* scene */
+    .scene{
+      position:relative;
+      width:min(520px, 92vw);
+      height:min(720px, 92vh);
+      display:grid;
+      place-items:center;
+      z-index:4;
+    }
+    .ground{
+      position:absolute;
+      bottom:0;
+      width:120%;
+      height:160px;
+      border-radius: 60% 60% 0 0;
+      background:
+        radial-gradient(80% 140% at 50% 10%, rgba(255,255,255,.95), rgba(255,255,255,.75) 40%, rgba(255,255,255,.0) 70%),
+        radial-gradient(50% 120% at 20% 30%, rgba(255,255,255,.9), transparent 60%),
+        radial-gradient(50% 120% at 80% 25%, rgba(255,255,255,.85), transparent 60%);
+      opacity:.85;
+      transform: translateY(30px);
+    }
+
+    .tree{
+      position:absolute;
+      bottom:130px;
+      width:360px;
+      height:520px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      transform: translateY(10px);
+      filter: drop-shadow(0 24px 40px rgba(0,0,0,.45));
+      animation: sway 4.8s ease-in-out infinite;
+      transform-origin: 50% 100%;
+    }
+    @keyframes sway{
+      0%,100%{ transform: translateY(10px) rotate(-1.2deg); }
+      50%{ transform: translateY(10px) rotate(1.2deg); }
+    }
+
+    .layer{
+      position:relative;
+      width:100%;
+      height:0;
+      border-left: 180px solid transparent;
+      border-right: 180px solid transparent;
+      border-bottom: 140px solid var(--tree1);
+      margin-top:-18px;
+      border-radius: 14px;
+    }
+    .layer:nth-child(2){ transform: scale(.86); border-bottom-color: var(--tree2); }
+    .layer:nth-child(3){ transform: scale(.72); border-bottom-color: var(--tree1); }
+    .layer:nth-child(4){ transform: scale(.58); border-bottom-color: var(--tree2); }
+
+    .layer:after{
+      content:"";
+      position:absolute;
+      left:-170px; right:-170px;
+      top:14px;
+      height:22px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(255,255,255,.15), rgba(255,255,255,.55), rgba(255,255,255,.15));
+      opacity:.7;
+    }
+
+    .trunk{
+      width:88px;
+      height:90px;
+      background: linear-gradient(180deg, #7b4a33, var(--trunk));
+      border-radius: 12px;
+      margin-top:-10px;
+      position:relative;
+      box-shadow: inset 0 8px 18px rgba(255,255,255,.12);
+    }
+
+    /* star */
+    .star{
+      position:absolute;
+      top:-14px;
+      width:0; height:0;
+      z-index:9;
+      filter: drop-shadow(0 0 18px rgba(255, 230, 120, .55));
+      animation: starPulse 1.8s ease-in-out infinite;
+    }
+    .star:before, .star:after{
+      content:"";
+      position:absolute;
+      left:-18px;
+      width:0;height:0;
+      border-left:18px solid transparent;
+      border-right:18px solid transparent;
+      border-bottom:36px solid #ffd86b;
+    }
+    .star:after{
+      transform: rotate(180deg);
+      top:10px;
+      border-bottom-color:#ffef9a;
+      opacity:.95;
+    }
+    @keyframes starPulse{
+      0%,100%{ transform: translateY(0) scale(1); }
+      50%{ transform: translateY(-3px) scale(1.04); }
+    }
+
+    /* garland lights */
+    .garland{
+      position:absolute;
+      left:50%;
+      top:86px;
+      width:320px;
+      height:320px;
+      transform: translateX(-50%);
+      pointer-events:none;
+      z-index:7;
+    }
+    .strand{
+      position:absolute;
+      left:50%;
+      width:340px;
+      height:180px;
+      transform: translateX(-50%);
+      border-bottom: 3px solid rgba(255,255,255,.16);
+      border-radius: 0 0 999px 999px;
+    }
+    .strand:nth-child(1){ top:70px; width:280px; opacity:.55; }
+    .strand:nth-child(2){ top:150px; width:320px; opacity:.45; }
+    .strand:nth-child(3){ top:230px; width:360px; opacity:.35; }
+
+    .bulb{
+      position:absolute;
+      width:12px;
+      height:12px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 14px currentColor;
+      opacity:.95;
+      animation: blink 1.6s infinite steps(2, end);
+    }
+    .bulb:nth-child(odd){ animation-duration: 1.2s; }
+    .bulb:nth-child(3n){ animation-duration: 1.8s; }
+    @keyframes blink{
+      0%,100%{ transform: scale(1); opacity:.95; }
+      50%{ transform: scale(.65); opacity:.45; }
+    }
+
+    /* ornaments as hover targets */
+    .orn{
+      position:absolute;
+      width:18px;
+      height:18px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,.9), rgba(255,255,255,.15) 25%, rgba(0,0,0,.0) 55%),
+        radial-gradient(circle at 60% 70%, rgba(0,0,0,.25), transparent 60%),
+        var(--c);
+      box-shadow: 0 10px 18px rgba(0,0,0,.25);
+      transform-origin: 50% -12px;
+      animation: dangle 2.6s ease-in-out infinite;
+      z-index:8;
+      cursor:pointer;
+    }
+    @keyframes dangle{ 0%,100%{ transform: rotate(-6deg);} 50%{ transform: rotate(6deg);} }
+    .orn:before{
+      content:"";
+      position:absolute;
+      width:8px; height:6px;
+      border-radius: 0 0 6px 6px;
+      background: rgba(220,220,220,.9);
+      left:50%; top:-6px;
+      transform: translateX(-50%);
+      box-shadow: 0 2px 0 rgba(0,0,0,.12);
+    }
+    .orn:after{
+      content:"";
+      position:absolute;
+      width:1px; height:14px;
+      background: rgba(255,255,255,.28);
+      left:50%; top:-20px;
+      transform: translateX(-50%);
+    }
+    .orn:hover{
+      filter: drop-shadow(0 0 14px rgba(255,255,255,.35));
+      animation-duration: 1.4s;
+    }
+
+    /* gifts */
+    .gifts{
+      position:absolute;
+      bottom:58px;
+      display:flex;
+      gap:18px;
+      z-index:6;
+      transform: translateX(-10px);
+    }
+    .gift{
+      width:92px;
+      height:72px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(0,0,0,.05)), var(--g);
+      position:relative;
+      box-shadow: 0 18px 28px rgba(0,0,0,.35);
+      animation: pop 3.4s ease-in-out infinite;
+    }
+    .gift:nth-child(2){ transform: translateY(12px) scale(.95); animation-delay: .4s; }
+    .gift:nth-child(3){ transform: translateY(6px) scale(.9); animation-delay: .8s; }
+    @keyframes pop{ 0%,100%{ transform: translateY(0) rotate(-1deg);} 50%{ transform: translateY(-6px) rotate(1deg);} }
+    .ribbon{ position:absolute; inset:0; }
+    .ribbon:before{
+      content:""; position:absolute; left:50%; top:0; bottom:0; width:14px;
+      transform: translateX(-50%); background: rgba(255,255,255,.35);
+      border-radius: 10px; mix-blend-mode: screen;
+    }
+    .ribbon:after{
+      content:""; position:absolute; top:50%; left:0; right:0; height:14px;
+      transform: translateY(-50%); background: rgba(255,255,255,.35);
+      border-radius: 10px; mix-blend-mode: screen;
+    }
+    .bow{
+      position:absolute; left:50%; top:-10px; width:34px; height:22px;
+      transform: translateX(-50%); filter: drop-shadow(0 8px 10px rgba(0,0,0,.25));
+    }
+    .bow:before, .bow:after{
+      content:""; position:absolute; width:18px; height:18px;
+      border-radius: 8px 14px 14px 8px; background: rgba(255,255,255,.45);
+    }
+    .bow:before{ left:0; transform: rotate(18deg); }
+    .bow:after{ right:0; border-radius: 14px 8px 8px 14px; transform: rotate(-18deg); }
+    .bow i{
+      position:absolute; left:50%; top:50%;
+      width:10px; height:10px; background: rgba(255,255,255,.55);
+      border-radius:50%; transform: translate(-50%,-50%);
+    }
+
+    /* snow canvas */
+    canvas#snow{ position:absolute; inset:0; z-index:2; pointer-events:none; }
+
+    /* popup ảnh khi hover */
+    .popup{
+      position:fixed;
+      z-index:9999;
+      width:170px;
+      border-radius: 18px;
+      overflow:hidden;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(10,20,54,.55);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 30px 70px rgba(0,0,0,.45);
+      transform: translate(-50%, -110%) scale(.92);
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .12s ease, transform .12s ease;
+    }
+    .popup.show{
+      opacity:1;
+      transform: translate(-50%, -110%) scale(1);
+    }
+    .popup .img{
+      width:100%;
+      height:110px;
+      background: #0b1230;
+      display:grid;
+      place-items:center;
+    }
+    .popup img{ width:100%; height:110px; object-fit:cover; display:block; }
+    .popup .cap{
+      padding:10px 12px;
+      font-size:13px;
+      font-weight:800;
+      letter-spacing:.2px;
+      text-shadow: 0 8px 24px rgba(0,0,0,.35);
+    }
+    .popup .sub{
+      margin-top:2px;
+      font-size:12px;
+      font-weight:650;
+      opacity:.8;
+    }
+
+    /* chữ Merry Christmas bay lên */
+    .floatText{
+      position:fixed;
+      z-index:9998;
+      left:0; top:0;
+      transform: translate(-50%, -50%);
+      font-weight:950;
+      letter-spacing:.5px;
+      padding:8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.16);
+      backdrop-filter: blur(10px);
+      text-shadow: 0 10px 30px rgba(0,0,0,.45);
+      pointer-events:none;
+      animation: rise 0.95s ease-out forwards;
+    }
+    @keyframes rise{
+      0%{ opacity:0; transform: translate(-50%, -10%) scale(.92); }
+      15%{ opacity:1; }
+      100%{ opacity:0; transform: translate(-50%, -160%) scale(1.03); }
+    }
+
+    @media (max-width:420px){
+      .tree{ width:300px; }
+      .layer{ border-left-width:150px; border-right-width:150px; border-bottom-width:120px; }
+      .garland{ width:280px; height:280px; }
+      .gifts{ gap:12px; }
+      .gift{ width:78px; height:64px; }
+      .note{ display:none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stars"></div>
+  <canvas id="snow"></canvas>
+
+  <div class="wrap">
+    <header>
+      <div class="title">
+        🎄 Merry Christmas
+        <small>Hover đồ trang trí để hiện ảnh + chữ bay • Có nhạc Noel</small>
+      </div>
+
+      <div class="controls">
+        <button class="btn" id="musicBtn">▶️ Play nhạc</button>
+        <button class="btn" id="lightBtn">✨ Đổi màu đèn</button>
+        <div class="note">Tip: Trình duyệt thường chặn tự phát nhạc, nên bấm Play 1 lần nha.</div>
+      </div>
+    </header>
+
+    <div class="scene" aria-label="Cây thông Noel">
+      <div class="tree" id="tree">
+        <div class="star"></div>
+
+        <div class="layer"></div>
+        <div class="layer"></div>
+        <div class="layer"></div>
+        <div class="layer"></div>
+
+        <div class="trunk"></div>
+
+        <div class="garland" id="garland">
+          <div class="strand"></div>
+          <div class="strand"></div>
+          <div class="strand"></div>
+        </div>
+
+        <!-- Ornaments (hover) -->
+        <div class="orn" data-title="Bánh gừng" data-sub="Ngọt ngào mùa lễ"
+             data-img="ginger" style="--c:#ff4d6d; left:86px; top:140px; animation-delay:.1s"></div>
+
+        <div class="orn" data-title="Kẹo gậy" data-sub="Candy cane ✨"
+             data-img="candy" style="--c:#ffd166; left:240px; top:170px; animation-delay:.35s"></div>
+
+        <div class="orn" data-title="Bông tuyết" data-sub="Let it snow!"
+             data-img="snowflake" style="--c:#4cc9f0; left:185px; top:220px; animation-delay:.2s"></div>
+
+        <div class="orn" data-title="Chuông Noel" data-sub="Jingle bells"
+             data-img="bell" style="--c:#a7ff83; left:110px; top:265px; animation-delay:.5s"></div>
+
+        <div class="orn" data-title="Cây kẹo" data-sub="Sweet & cute"
+             data-img="lollipop" style="--c:#b388ff; left:255px; top:290px; animation-delay:.15s"></div>
+
+        <div class="orn" data-title="Món quà" data-sub="Surprise!"
+             data-img="gift" style="--c:#ff9f1c; left:170px; top:330px; animation-delay:.4s"></div>
+      </div>
+
+      <div class="gifts" aria-hidden="true">
+        <div class="gift" style="--g:#ff4d6d"><div class="ribbon"></div><div class="bow"><i></i></div></div>
+        <div class="gift" style="--g:#4cc9f0"><div class="ribbon"></div><div class="bow"><i></i></div></div>
+        <div class="gift" style="--g:#ffd166"><div class="ribbon"></div><div class="bow"><i></i></div></div>
+      </div>
+
+      <div class="ground"></div>
+    </div>
+  </div>
+
+  <!-- popup -->
+  <div class="popup" id="popup" role="dialog" aria-hidden="true">
+    <div class="img"><img id="popupImg" alt="Hình trang trí" /></div>
+    <div class="cap" id="popupCap">Title<div class="sub" id="popupSub">sub</div></div>
+  </div>
+
+  <script>
+    // =========================
+    // 1) TUYẾT RƠI (Canvas)
+    // =========================
+    const canvas = document.getElementById('snow');
+    const ctx = canvas.getContext('2d');
+
+    function safeResize(){
+      ctx.setTransform(1,0,0,1,0,0);
+      canvas.width = window.innerWidth * devicePixelRatio;
+      canvas.height = window.innerHeight * devicePixelRatio;
+      ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+    }
+    safeResize();
+    window.addEventListener('resize', () => { safeResize(); initFlakes(); });
+
+    const flakes = [];
+    function rand(min, max){ return Math.random() * (max - min) + min; }
+
+    function initFlakes(){
+      flakes.length = 0;
+      const count = Math.min(240, Math.floor(window.innerWidth / 3.5));
+      for(let i=0;i<count;i++){
+        flakes.push({
+          x: rand(0, window.innerWidth),
+          y: rand(-window.innerHeight, window.innerHeight),
+          r: rand(1, 3.2),
+          v: rand(.6, 2.2),
+          drift: rand(-.6, .6),
+          wobble: rand(0, Math.PI * 2)
+        });
+      }
+    }
+    initFlakes();
+
+    function drawSnow(){
+      ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+      ctx.globalAlpha = 0.92;
+      for(const f of flakes){
+        f.wobble += 0.01 + f.r * 0.003;
+        f.y += f.v;
+        f.x += f.drift + Math.sin(f.wobble) * 0.35;
+
+        if(f.y > window.innerHeight + 10){
+          f.y = -10; f.x = rand(0, window.innerWidth);
+        }
+        if(f.x < -10) f.x = window.innerWidth + 10;
+        if(f.x > window.innerWidth + 10) f.x = -10;
+
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(255,255,255,.95)';
+        ctx.fill();
+      }
+      requestAnimationFrame(drawSnow);
+    }
+    drawSnow();
+
+    // =========================
+    // 2) ĐÈN NHẤP NHÁY
+    // =========================
+    const garland = document.getElementById('garland');
+    const palettes = [
+      ['#ff4d6d', '#ffd166', '#4cc9f0', '#a7ff83', '#b388ff'],
+      ['#ffffff', '#7df9ff', '#ffef9a', '#ff9bd3', '#b7ffea'],
+      ['#ff3b3b', '#00d1ff', '#00ff87', '#ffe66d', '#c77dff']
+    ];
+    let paletteIndex = 0;
+
+    function addBulbs(){
+      garland.querySelectorAll('.bulb').forEach(b => b.remove());
+      const bulbs = 26;
+
+      for(let i=0;i<bulbs;i++){
+        const b = document.createElement('div');
+        b.className = 'bulb';
+        const colors = palettes[paletteIndex];
+        b.style.color = colors[i % colors.length];
+
+        const row = i % 3;
+        const t = (i / bulbs);
+        const left = 50 + Math.cos(t * Math.PI * 2) * (row === 0 ? 36 : row === 1 ? 46 : 56);
+        const top  = (row === 0 ? 78 : row === 1 ? 158 : 238) + Math.sin(t * Math.PI * 2) * 8;
+
+        b.style.left = left + '%';
+        b.style.top  = top + 'px';
+        b.style.animationDelay = (Math.random() * 1.2) + 's';
+        garland.appendChild(b);
+      }
+    }
+    addBulbs();
+
+    document.getElementById('lightBtn').addEventListener('click', () => {
+      paletteIndex = (paletteIndex + 1) % palettes.length;
+      addBulbs();
+    });
+
+    // =========================
+    // 3) HOVER: POPUP ẢNH + CHỮ BAY
+    // =========================
+    const popup = document.getElementById('popup');
+    const popupImg = document.getElementById('popupImg');
+    const popupCap = document.getElementById('popupCap');
+    const popupSub = document.getElementById('popupSub');
+
+    // SVG "ảnh" nhúng sẵn (data uri) — bạn có thể thay bằng ảnh thật nếu muốn
+    function svgData(svg){
+      return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+    }
+
+    const IMG = {
+      ginger: svgData(`
+        <svg xmlns="http://www.w3.org/2000/svg" width="360" height="240">
+          <defs>
+            <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+              <stop stop-color="#ff4d6d" stop-opacity=".25"/>
+              <stop offset="1" stop-color="#0a1436" stop-opacity="1"/>
+            </linearGradient>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#g)"/>
+          <circle cx="68" cy="58" r="10" fill="#fff" opacity=".6"/>
+          <text x="24" y="46" fill="#eaf2ff" font-size="22" font-family="Verdana" font-weight="700">Gingerbread</text>
+          <g transform="translate(150,54)">
+            <path d="M40 10c10 0 18 8 18 18s-8 18-18 18-18-8-18-18S30 10 40 10z" fill="#d69c62"/>
+            <path d="M20 45c-10 5-16 18-10 28 5 8 15 10 26 6 8 10 22 10 30 0 11 4 21 2 26-6 6-10 0-23-10-28-6-3-10-8-10-14 0-10-8-18-18-18s-18 8-18 18c0 6-4 11-10 14z" fill="#c9874f"/>
+            <circle cx="33" cy="28" r="3.2" fill="#0a1436"/>
+            <circle cx="47" cy="28" r="3.2" fill="#0a1436"/>
+            <path d="M34 38c6 4 10 4 16 0" stroke="#0a1436" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <circle cx="40" cy="62" r="3" fill="#fff"/>
+            <circle cx="40" cy="74" r="3" fill="#fff"/>
+          </g>
+        </svg>
+      `),
+
+      candy: svgData(`
+        <svg xmlns="http://www.w3.org/2000/svg" width="360" height="240">
+          <defs>
+            <radialGradient id="r" cx="30%" cy="30%" r="90%">
+              <stop stop-color="#ffd166" stop-opacity=".9"/>
+              <stop offset="1" stop-color="#0a1436"/>
+            </radialGradient>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#r)"/>
+          <text x="24" y="46" fill="#eaf2ff" font-size="22" font-family="Verdana" font-weight="800">Candy Cane</text>
+          <g transform="translate(160,40) rotate(-18)">
+            <path d="M40 20c0-12 10-20 22-20s22 8 22 20c0 12-10 20-22 20h-6v18h-18V40h-6C50 40 40 32 40 20z"
+              fill="#ffffff" opacity=".95"/>
+            <path d="M64 0c12 0 22 8 22 20 0 12-10 20-22 20h-6"
+              fill="none" stroke="#ff4d6d" stroke-width="10" stroke-linecap="round"/>
+            <path d="M38 58h18v140c0 12-8 20-18 20s-18-8-18-20V78c0-11 8-20 18-20z"
+              fill="#ffffff" opacity=".95"/>
+            <path d="M38 80h18" stroke="#ff4d6d" stroke-width="10"/>
+            <path d="M38 110h18" stroke="#ff4d6d" stroke-width="10"/>
+            <path d="M38 140h18" stroke="#ff4d6d" stroke-width="10"/>
+            <path d="M38 170h18" stroke="#ff4d6d" stroke-width="10"/>
+          </g>
+        </svg>
+      `),
+
+      snowflake: svgData(`
+        <svg xmlns="http://www.w3.org/2000/svg" width="360" height="240">
+          <defs>
+            <linearGradient id="b" x1="0" y1="0" x2="1" y2="1">
+              <stop stop-color="#4cc9f0" stop-opacity=".55"/>
+              <stop offset="1" stop-color="#0a1436"/>
+            </linearGradient>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#b)"/>
+          <text x="24" y="46" fill="#eaf2ff" font-size="22" font-family="Verdana" font-weight="800">Snowflake</text>
+          <g transform="translate(180,132)" stroke="#eaf2ff" stroke-width="6" stroke-linecap="round">
+            <line x1="-80" y1="0" x2="80" y2="0"/>
+            <line x1="0" y1="-80" x2="0" y2="80"/>
+            <line x1="-56" y1="-56" x2="56" y2="56"/>
+            <line x1="-56" y1="56" x2="56" y2="-56"/>
+            <g stroke-width="4" opacity=".9">
+              <line x1="-60" y1="0" x2="-74" y2="-12"/>
+              <line x1="-60" y1="0" x2="-74" y2="12"/>
+              <line x1="60" y1="0" x2="74" y2="-12"/>
+              <line x1="60" y1="0" x2="74" y2="12"/>
+              <line x1="0" y1="-60" x2="-12" y2="-74"/>
+              <line x1="0" y1="-60" x2="12" y2="-74"/>
+              <line x1="0" y1="60" x2="-12" y2="74"/>
+              <line x1="0" y1="60" x2="12" y2="74"/>
+            </g>
+          </g>
+        </svg>
+      `),
+
+      bell: svgData(`
+        <svg xmlns="http://www.w3.org/2000/svg" width="360" height="240">
+          <defs>
+            <linearGradient id="y" x1="0" y1="0" x2="1" y2="1">
+              <stop stop-color="#a7ff83" stop-opacity=".35"/>
+              <stop offset="1" stop-color="#0a1436"/>
+            </linearGradient>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#y)"/>
+          <text x="24" y="46" fill="#eaf2ff" font-size="22" font-family="Verdana" font-weight="800">Jingle Bell</text>
+          <g transform="translate(180,60)">
+            <path d="M0 0c40 0 72 32 72 72v40c0 26-20 48-48 52H-24c-28-4-48-26-48-52V72C-72 32-40 0 0 0z"
+              fill="#ffd166"/>
+            <path d="M-58 124h116c-6 18-22 30-40 30H-18c-18 0-34-12-40-30z"
+              fill="#ffef9a" opacity=".9"/>
+            <circle cx="0" cy="156" r="10" fill="#0a1436" opacity=".7"/>
+            <rect x="-14" y="-18" width="28" height="20" rx="10" fill="#eaf2ff" opacity=".85"/>
+          </g>
+        </svg>
+      `),
+
+      lollipop: svgData(`
+        <svg xmlns="http://www.w3.org/2000/svg" width="360" height="240">
+          <defs>
+            <radialGradient id="p" cx="30%" cy="30%" r="90%">
+              <stop stop-color="#b388ff" stop-opacity=".75"/>
+              <stop offset="1" stop-color="#0a1436"/>
+            </radialGradient>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#p)"/>
+          <text x="24" y="46" fill="#eaf2ff" font-size="22" font-family="Verdana" font-weight="800">Lollipop</text>
+          <g transform="translate(200,80)">
+            <circle cx="0" cy="0" r="56" fill="#ff9bd3"/>
+            <path d="M0-56a56 56 0 1 1-39.6 95.6" fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round"/>
+            <path d="M0-34a34 34 0 1 1-24 58" fill="none" stroke="#4cc9f0" stroke-width="10" stroke-linecap="round"/>
+            <rect x="-6" y="56" width="12" height="88" rx="6" fill="#eaf2ff" opacity=".85"/>
+          </g>
+        </svg>
+      `),
+
+      gift: svgData(`
+        <svg xmlns="http://www.w3.org/2000/svg" width="360" height="240">
+          <defs>
+            <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+              <stop stop-color="#ff9f1c" stop-opacity=".6"/>
+              <stop offset="1" stop-color="#0a1436"/>
+            </linearGradient>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#g2)"/>
+          <text x="24" y="46" fill="#eaf2ff" font-size="22" font-family="Verdana" font-weight="800">Gift Box</text>
+          <g transform="translate(180,74)">
+            <rect x="-70" y="40" width="140" height="92" rx="18" fill="#ff4d6d"/>
+            <rect x="-12" y="40" width="24" height="92" rx="8" fill="#ffffff" opacity=".55"/>
+            <rect x="-70" y="80" width="140" height="18" rx="8" fill="#ffffff" opacity=".55"/>
+            <path d="M-6 40c-18-10-32-22-26-34 6-12 24-10 36 8 6 10 10 18 12 26"
+              fill="#ffffff" opacity=".55"/>
+            <path d="M6 40c18-10 32-22 26-34-6-12-24-10-36 8-6 10-10 18-12 26"
+              fill="#ffffff" opacity=".55"/>
+            <circle cx="0" cy="40" r="9" fill="#ffffff" opacity=".65"/>
+          </g>
+        </svg>
+      `),
+    };
+
+    function showPopup(target, x, y){
+      const title = target.getAttribute('data-title') || 'Noel';
+      const sub = target.getAttribute('data-sub') || '';
+      const key = target.getAttribute('data-img');
+      popupImg.src = IMG[key] || IMG.gift;
+
+      popupCap.firstChild && (popupCap.firstChild.nodeValue = title);
+      popupSub.textContent = sub;
+
+      popup.style.left = x + 'px';
+      popup.style.top = y + 'px';
+      popup.classList.add('show');
+      popup.setAttribute('aria-hidden', 'false');
+    }
+
+    function hidePopup(){
+      popup.classList.remove('show');
+      popup.setAttribute('aria-hidden', 'true');
+    }
+
+    function spawnFloatText(x, y, text){
+      const el = document.createElement('div');
+      el.className = 'floatText';
+      el.textContent = text;
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 980);
+    }
+
+    const ornaments = document.querySelectorAll('.orn');
+    let hoverTimer = null;
+
+    ornaments.forEach(o => {
+      o.addEventListener('mouseenter', (e) => {
+        const r = o.getBoundingClientRect();
+        const x = r.left + r.width/2;
+        const y = r.top;
+
+        showPopup(o, x, y);
+        // tạo chữ bay lên (thêm chút delay cho “mượt”)
+        clearTimeout(hoverTimer);
+        hoverTimer = setTimeout(() => {
+          spawnFloatText(x, y, '🎄 Merry Christmas ✨');
+        }, 40);
+      });
+
+      o.addEventListener('mousemove', (e) => {
+        // popup đi theo con trỏ nhẹ nhẹ
+        popup.style.left = e.clientX + 'px';
+        popup.style.top = e.clientY + 'px';
+      });
+
+      o.addEventListener('mouseleave', () => {
+        clearTimeout(hoverTimer);
+        hidePopup();
+      });
+    });
+
+    // click cây lấp lánh
+    const tree = document.getElementById('tree');
+    tree.addEventListener('click', () => {
+      tree.animate(
+        [
+          { filter: 'drop-shadow(0 24px 40px rgba(0,0,0,.45))' },
+          { filter: 'drop-shadow(0 24px 70px rgba(125,249,255,.28))' },
+          { filter: 'drop-shadow(0 24px 40px rgba(0,0,0,.45))' },
+        ],
+        { duration: 900, easing: 'ease-in-out' }
+      );
+    });
+
+    // =========================
+    // 4) NHẠC NOEL (WebAudio)
+    //    (Tự phát thường bị chặn -> dùng nút Play)
+    // =========================
+    let audioCtx = null;
+    let master = null;
+    let isPlaying = false;
+    let schedTimer = null;
+
+    // giai điệu đơn giản kiểu carol (không phải bản gốc) để chạy ngay
+    // (notes: tần số Hz, dur: giây)
+    const song = [
+      // "Jingle-ish" vibe
+      {f: 659.25, d: .22},{f:659.25,d:.22},{f:659.25,d:.30},
+      {f:659.25, d: .22},{f:659.25,d:.22},{f:659.25,d:.30},
+      {f:659.25, d: .22},{f:783.99,d:.22},{f:523.25,d:.22},{f:587.33,d:.22},{f:659.25,d:.50},
+      {f:698.46, d: .22},{f:698.46,d:.22},{f:698.46,d:.22},{f:698.46,d:.22},{f:698.46,d:.22},
+      {f:659.25, d: .22},{f:659.25,d:.22},{f:659.25,d:.22},
+      {f:659.25, d: .22},{f:587.33,d:.22},{f:587.33,d:.22},{f:659.25,d:.22},{f:587.33,d:.30},{f:783.99,d:.35},
+      {f: 0, d: .25}, // nghỉ
+    ];
+
+    function ensureAudio(){
+      if(audioCtx) return;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+      master = audioCtx.createGain();
+      master.gain.value = 0.16;
+      master.connect(audioCtx.destination);
+    }
+
+    function playNote(freq, startTime, duration){
+      if(freq <= 0) return;
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      // âm mềm
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      // envelope
+      const a = 0.01, r = 0.08;
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(1.0, startTime + a);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + Math.max(0.02, duration - r));
+
+      osc.connect(gain);
+      gain.connect(master);
+
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    }
+
+    function startSongLoop(){
+      let idx = 0;
+      let t = audioCtx.currentTime + 0.05;
+
+      function scheduleAhead(){
+        if(!isPlaying) return;
+
+        // schedule ~0.7s ahead
+        const lookAhead = 0.7;
+        while(t < audioCtx.currentTime + lookAhead){
+          const n = song[idx];
+          playNote(n.f, t, n.d);
+          t += n.d;
+
+          idx = (idx + 1) % song.length;
+          // vòng lại nhẹ nhàng
+          if(idx === 0) t += 0.12;
+        }
+      }
+
+      scheduleAhead();
+      schedTimer = setInterval(scheduleAhead, 80);
+    }
+
+    function stopSong(){
+      isPlaying = false;
+      if(schedTimer){ clearInterval(schedTimer); schedTimer = null; }
+    }
+
+    const musicBtn = document.getElementById('musicBtn');
+    musicBtn.addEventListener('click', async () => {
+      ensureAudio();
+
+      if(audioCtx.state === 'suspended'){
+        try{ await audioCtx.resume(); }catch(e){}
+      }
+
+      if(!isPlaying){
+        isPlaying = true;
+        musicBtn.textContent = '⏸️ Pause nhạc';
+        startSongLoop();
+        // bonus: khi bật nhạc, thả 1 chữ bay lên
+        spawnFloatText(window.innerWidth * 0.5, window.innerHeight * 0.22, '🎶 Merry Christmas!');
+      }else{
+        stopSong();
+        musicBtn.textContent = '▶️ Play nhạc';
+      }
+    });
+  </script>
+</body>
+</html>
