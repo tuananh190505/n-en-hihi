@@ -1,498 +1,96 @@
 <!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Christmas Tree — PNG + Slow Spin</title>
-  <style>
-    :root{ --bg1:#050814; --bg2:#0a1436; --gold:#ffef9a; }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;overflow:hidden;background:var(--bg1);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
-    canvas{position:fixed;inset:0;display:block}
-
-    .top{
-      position:fixed; top:14px; left:0; right:0; z-index:10;
-      display:flex; justify-content:center; pointer-events:none;
-      text-transform:uppercase; letter-spacing:2px; font-weight:950;
-      color:rgba(255,239,154,.98);
-      text-shadow:0 0 18px rgba(255,239,154,.25), 0 20px 60px rgba(0,0,0,.65);
-    }
-    .top span{
-      padding:10px 14px; border-radius:999px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.14);
-      backdrop-filter: blur(10px);
-    }
-
-    .corner{
-      position:fixed; top:14px; right:14px; z-index:30;
-      display:flex; gap:10px; align-items:center;
-    }
-    .ico{
-      width:40px; height:40px; border-radius:999px;
-      display:grid; place-items:center;
-      cursor:pointer; user-select:none;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.16);
-      color:rgba(234,242,255,.95);
-      backdrop-filter: blur(10px);
-      box-shadow:0 18px 40px rgba(0,0,0,.35);
-      font-size:18px; font-weight:900;
-      transition:transform .12s ease, filter .12s ease;
-    }
-    .ico:hover{ transform:scale(1.08); filter:drop-shadow(0 0 14px rgba(255,239,154,.22)); }
-    .ico.on{ background:rgba(255,239,154,.90); color:#10162b; border-color:rgba(255,239,154,.65); }
-
-    .panel{
-      position:fixed; left:12px; bottom:12px; z-index:40;
-      width:min(560px, 92vw);
-      padding:10px 12px;
-      border-radius:14px;
-      background:rgba(0,0,0,.35);
-      border:1px solid rgba(255,255,255,.14);
-      color:rgba(234,242,255,.92);
-      backdrop-filter: blur(10px);
-      box-shadow:0 18px 40px rgba(0,0,0,.35);
-      font-size:13px;
-      display:none;
-      white-space:pre-line;
-      max-height:40vh;
-      overflow:auto;
-    }
-    .panel.show{display:block}
-
-    .hotspots{position:fixed; inset:0; z-index:20; pointer-events:auto}
-    .giftHotspot{
-      position:absolute; width:56px; height:56px;
-      transform:translate(-50%,-50%);
-      border-radius:16px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.14);
-      backdrop-filter: blur(10px);
-      box-shadow:0 18px 40px rgba(0,0,0,.35);
-      display:grid; place-items:center;
-      cursor:pointer;
-      transition:transform .15s ease, filter .15s ease, opacity .15s ease;
-      opacity:.95;
-    }
-    .giftHotspot:hover{ transform:translate(-50%,-50%) scale(1.08); filter: drop-shadow(0 0 18px rgba(255,239,154,.25)); opacity:1; }
-    .giftHotspot svg{width:34px;height:34px}
-
-    .lightbox{
-      position:fixed; inset:0; z-index:60;
-      display:none; place-items:center;
-      background:rgba(0,0,0,.58);
-      backdrop-filter: blur(7px);
-    }
-    .lightbox.show{display:grid}
-    .viewer{
-      width:min(900px, 94vw);
-      height:min(600px, 78vh);
-      border-radius:18px;
-      overflow:hidden;
-      border:3px solid rgba(255,239,154,.75);
-      box-shadow:0 40px 120px rgba(0,0,0,.68);
-      background:#0b1230;
-      position:relative;
-    }
-    .viewer img{width:100%; height:100%; object-fit:contain; display:block; background:#0b1230}
-    .cap{
-      position:absolute; left:12px; right:12px; bottom:12px;
-      padding:10px 12px;
-      border-radius:14px;
-      background:rgba(0,0,0,.35);
-      border:1px solid rgba(255,255,255,.14);
-      color:rgba(234,242,255,.92);
-      font-weight:900;
-      backdrop-filter: blur(10px);
-      display:flex; justify-content:space-between; gap:10px; align-items:center;
-    }
-    .cap small{display:block; font-weight:700; opacity:.8; margin-top:3px}
-
-    .controls{position:fixed; inset:0; z-index:61; pointer-events:none; display:none;}
-    .controls.show{display:block}
-    .ctl{
-      pointer-events:auto; position:fixed;
-      border:none; cursor:pointer;
-      padding:10px 12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.10);
-      border:1px solid rgba(255,255,255,.16);
-      color:rgba(234,242,255,.95);
-      font-weight:950;
-      box-shadow:0 18px 40px rgba(0,0,0,.35);
-    }
-    #closeBtn{top:16px; right:16px}
-    #prevBtn{left:16px; top:50%; transform:translateY(-50%)}
-    #nextBtn{right:16px; top:50%; transform:translateY(-50%)}
-  </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>🎄 Merry Christmas</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
-  <canvas id="c"></canvas>
-  <div class="top"><span>MERRY CHRISTMAS</span></div>
+  <!-- Tuyết rơi -->
+  <canvas id="snow"></canvas>
 
-  <audio id="bgm" src="assets/Last-Christmas.mp3" autoplay loop playsinline preload="auto"></audio>
+  <!-- Nhạc nền -->
+  <audio id="bgm" src="Last-Christmas.mp3" preload="auto" loop></audio>
 
-  <div class="corner">
-    <div class="ico" id="icoAudio" title="Bật/Tắt nhạc">🔊</div>
-    <div class="ico" id="icoDebug" title="Debug">🐞</div>
+  <div class="topbar">
+    <div class="brand">🎄 Wish Tree</div>
+    <button id="musicBtn" class="btn" type="button" aria-label="Bật/tắt nhạc">
+      🔈 Bật nhạc
+    </button>
   </div>
 
-  <div class="panel" id="panel"></div>
-  <div class="hotspots" id="hotspots"></div>
+  <main class="stage">
+    <div class="scene">
+      <!-- Cây thông -->
+      <img src="tree.png" class="tree rotate" alt="Cây thông Noel" />
 
-  <div class="lightbox" id="lightbox" aria-hidden="true">
-    <div class="viewer">
-      <img id="gimg" alt="gift image"/>
-      <div class="cap">
-        <div>
-          <div id="gtitle">Gift</div>
-          <small id="gsub">Ảnh 1/1</small>
+      <!-- Hộp quà -->
+      <button id="giftBtn" class="gift" type="button" aria-label="Mở quà">
+        <span class="gift__tag">Nhấn để mở quà</span>
+
+        <!-- Hộp quà SVG (không cần gift.png) -->
+        <svg viewBox="0 0 200 200" class="gift__svg" aria-hidden="true">
+          <defs>
+            <linearGradient id="box" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#d62828"/>
+              <stop offset="1" stop-color="#9b1c1c"/>
+            </linearGradient>
+            <linearGradient id="ribbon" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#f6c453"/>
+              <stop offset="1" stop-color="#d59b2d"/>
+            </linearGradient>
+          </defs>
+
+          <!-- nắp -->
+          <rect x="30" y="55" width="140" height="30" rx="10" fill="url(#box)"/>
+          <rect x="92" y="45" width="16" height="50" rx="8" fill="url(#ribbon)"/>
+          <rect x="30" y="66" width="140" height="10" rx="5" fill="rgba(255,255,255,.12)"/>
+
+          <!-- thân hộp -->
+          <rect x="35" y="80" width="130" height="90" rx="12" fill="url(#box)"/>
+          <rect x="92" y="80" width="16" height="90" rx="8" fill="url(#ribbon)"/>
+          <rect x="35" y="120" width="130" height="12" rx="6" fill="rgba(255,255,255,.12)"/>
+
+          <!-- nơ -->
+          <path d="M100 58
+                   C90 40, 60 45, 70 70
+                   C78 90, 98 78, 100 68
+                   C102 78, 122 90, 130 70
+                   C140 45, 110 40, 100 58Z"
+                fill="url(#ribbon)"/>
+          <circle cx="100" cy="68" r="10" fill="#f9d57a"/>
+        </svg>
+      </button>
+    </div>
+  </main>
+
+  <!-- Modal album ảnh -->
+  <div id="modal" class="modal" aria-hidden="true">
+    <div class="modal__backdrop" data-close="1"></div>
+
+    <div class="modal__panel" role="dialog" aria-modal="true" aria-label="Album ảnh">
+      <div class="modal__header">
+        <div class="modal__title">🎁 Quà của bạn</div>
+        <button class="btn" id="closeModal" type="button">✕ Đóng</button>
+      </div>
+
+      <div class="modal__body">
+        <div class="viewer">
+          <button id="prevBtn" class="nav" type="button" aria-label="Ảnh trước">‹</button>
+          <img id="viewerImg" class="viewer__img" alt="Ảnh phóng to" />
+          <button id="nextBtn" class="nav" type="button" aria-label="Ảnh sau">›</button>
         </div>
-        <div style="opacity:.9">🎁</div>
+
+        <div id="thumbs" class="thumbs"></div>
+        <div id="emptyNote" class="emptyNote">
+          Chưa có ảnh trong <code>assets/gallery/</code>. Thêm ảnh vào đó rồi reload trang nhé.
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="controls" id="controls">
-    <button class="ctl" id="closeBtn">✕</button>
-    <button class="ctl" id="prevBtn">◀</button>
-    <button class="ctl" id="nextBtn">▶</button>
-  </div>
-
-<script>
-(() => {
-  // ========= DEBUG =========
-  const panel = document.getElementById('panel');
-  const icoDebug = document.getElementById('icoDebug');
-  let debug = false;
-  function log(msg){
-    if(!debug) return;
-    panel.classList.add('show');
-    panel.textContent = msg + "\n\n" + panel.textContent;
-  }
-  icoDebug.addEventListener('click', ()=>{
-    debug = !debug;
-    panel.classList.toggle('show', debug);
-    icoDebug.classList.toggle('on', debug);
-    log("Debug ON");
-  });
-  window.addEventListener('error', (e)=>{
-    debug = true; panel.classList.add('show'); icoDebug.classList.add('on');
-    panel.textContent = "JS ERROR:\n" + (e.message||"unknown") + "\n" + (e.filename||"") + ":" + (e.lineno||"") + "\n\n" + panel.textContent;
-  });
-
-  const rand=(a,b)=>Math.random()*(b-a)+a;
-  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-
-  // ========= AUDIO =========
-  const bgm = document.getElementById('bgm');
-  const icoAudio = document.getElementById('icoAudio');
-
-  async function tryPlay(){
-    try{
-      bgm.volume = 0.75;
-      await bgm.play();
-      icoAudio.classList.add('on');
-      return true;
-    }catch{
-      icoAudio.classList.remove('on');
-      log("Autoplay blocked. Click 🔊 to enable.");
-      return false;
-    }
-  }
-  icoAudio.addEventListener('click', async ()=>{
-    if(!bgm.paused){ bgm.pause(); icoAudio.classList.remove('on'); return; }
-    await tryPlay();
-  });
-  tryPlay();
-  window.addEventListener('pointerdown', ()=>{ if(bgm.paused) bgm.play().then(()=>icoAudio.classList.add('on')).catch(()=>{}); }, {passive:true});
-
-  // ========= GIFTS (đổi theo file ảnh bạn có) =========
-  const GIFT_ALBUMS = {
-    gift1: { title:"Hộp quà số 1", images:["assets/anh.png","assets/hihi.png"] },
-    gift2: { title:"Hộp quà số 2", images:["assets/hihi.png"] },
-    gift3: { title:"Hộp quà số 3", images:["assets/anh.png"] }
-  };
-  const PLACEHOLDER = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800">
-      <rect width="100%" height="100%" fill="#0b1230"/>
-      <text x="60" y="140" fill="#eaf2ff" font-family="Verdana" font-size="54" font-weight="900">Ảnh chưa có</text>
-      <text x="60" y="210" fill="#ffef9a" font-family="Verdana" font-size="28" opacity=".92">Kiểm tra lại assets/anh.png & assets/hihi.png</text>
-    </svg>
-  `);
-
-  // ========= CANVAS =========
-  const canvas = document.getElementById('c');
-  const ctx = canvas.getContext('2d', {alpha:false});
-  let W=0,H=0,DPR=1;
-
-  // background particles
-  const snow=[], fireflies=[], bursts=[];
-
-  function resize(){
-    DPR = Math.min(2, devicePixelRatio || 1);
-    canvas.width = Math.floor(innerWidth * DPR);
-    canvas.height = Math.floor(innerHeight * DPR);
-    canvas.style.width = innerWidth + 'px';
-    canvas.style.height = innerHeight + 'px';
-    ctx.setTransform(DPR,0,0,DPR,0,0);
-    W = innerWidth; H = innerHeight;
-    initSnow(); initFireflies();
-  }
-  addEventListener('resize', resize, {passive:true});
-  resize();
-
-  function initSnow(){
-    snow.length=0;
-    const n=Math.min(420, Math.floor(W/2.2));
-    for(let i=0;i<n;i++){
-      snow.push({x:rand(0,W), y:rand(0,H), r:rand(0.7,3.0), v:rand(0.8,3.2), s:rand(-0.9,0.9), w:rand(0,Math.PI*2), a:rand(0.50,0.96)});
-    }
-  }
-  function initFireflies(){
-    fireflies.length=0;
-    const n=Math.min(110, Math.floor(W/12));
-    for(let i=0;i<n;i++){
-      fireflies.push({ x:rand(W*0.18,W*0.82), y:rand(H*0.12,H*0.88), r:rand(0.8,2.4), vx:rand(-0.28,0.28), vy:rand(-0.28,0.28), phase:rand(0,Math.PI*2) });
-    }
-  }
-  function spawnBurst(x,y){
-    const cols=['#ffef9a','#ffd166','#ff4d6d','#b388ff','#7df9ff','#a7ff83','#ffffff'];
-    for(let i=0;i<220;i++){
-      bursts.push({x,y,vx:rand(-3.2,3.2),vy:rand(-3.2,3.2),life:rand(25,90),r:rand(1.0,3.8),c:cols[i%cols.length]});
-    }
-  }
-
-  // ========= TREE IMAGE (PNG) =========
-  const treeImg = new Image();
-  treeImg.src = "assets/tree.png";
-  treeImg.onload = () => log("tree.png loaded OK");
-  treeImg.onerror = () => {
-    debug=true; panel.classList.add('show'); icoDebug.classList.add('on');
-    panel.textContent = "TREE IMAGE ERROR:\nKhông tải được assets/tree.png\nHãy upload ảnh cây thông và đặt đúng tên.\n\n" + panel.textContent;
-  };
-
-  // ========= Gifts hotspots (vẽ dưới gốc cây) =========
-  const hotspots = document.getElementById('hotspots');
-  const giftHotspots = [
-    { id:"gift1", x:-0.28, y:0.93, c:"#ff4d6d" },
-    { id:"gift2", x: 0.00, y:0.95, c:"#4cc9f0" },
-    { id:"gift3", x: 0.28, y:0.93, c:"#ffd166" },
-  ];
-  function giftIconSVG(color){
-    return `
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <rect x="4" y="9" width="16" height="12" rx="3" fill="${color}" opacity=".95"/>
-        <rect x="11" y="9" width="2" height="12" rx="1" fill="rgba(0,0,0,.16)"/>
-        <rect x="4" y="14" width="16" height="2" rx="1" fill="rgba(0,0,0,.16)"/>
-      </svg>`;
-  }
-  const hsEls=[];
-  hotspots.innerHTML="";
-  for(const g of giftHotspots){
-    const el=document.createElement('div');
-    el.className="giftHotspot";
-    el.dataset.gift=g.id;
-    el.innerHTML=giftIconSVG(g.c);
-    hotspots.appendChild(el);
-    hsEls.push(el);
-  }
-
-  // ========= Lightbox =========
-  const lightbox=document.getElementById('lightbox');
-  const controls=document.getElementById('controls');
-  const gimg=document.getElementById('gimg');
-  const gtitle=document.getElementById('gtitle');
-  const gsub=document.getElementById('gsub');
-  const closeBtn=document.getElementById('closeBtn');
-  const prevBtn=document.getElementById('prevBtn');
-  const nextBtn=document.getElementById('nextBtn');
-  let currentGift=null, currentIndex=0;
-
-  function safeLoad(url){
-    return new Promise(resolve=>{
-      const im=new Image();
-      im.onload=()=>resolve(url);
-      im.onerror=()=>resolve(PLACEHOLDER);
-      im.src=url;
-    });
-  }
-  async function renderGallery(){
-    const album=GIFT_ALBUMS[currentGift];
-    const total=album?.images?.length||1;
-    currentIndex=(currentIndex+total)%total;
-    const src=album?.images?.[currentIndex]||PLACEHOLDER;
-    gimg.src=await safeLoad(src);
-    gtitle.textContent=album?.title||"Gift";
-    gsub.textContent=`Ảnh ${currentIndex+1}/${total}`;
-  }
-  async function openGift(giftId){
-    const album=GIFT_ALBUMS[giftId];
-    if(!album || !album.images || album.images.length===0){
-      debug=true; panel.classList.add('show'); icoDebug.classList.add('on');
-      panel.textContent="GIFT CONFIG:\nChưa có ảnh cho "+giftId+"\n\n"+panel.textContent;
-      return;
-    }
-    currentGift=giftId; currentIndex=0;
-    lightbox.classList.add('show');
-    controls.classList.add('show');
-    await renderGallery();
-  }
-  function closeGift(){ lightbox.classList.remove('show'); controls.classList.remove('show'); }
-  async function prev(){ if(!currentGift) return; currentIndex--; await renderGallery(); }
-  async function next(){ if(!currentGift) return; currentIndex++; await renderGallery(); }
-
-  closeBtn.addEventListener('click', closeGift);
-  prevBtn.addEventListener('click', prev);
-  nextBtn.addEventListener('click', next);
-  lightbox.addEventListener('click', (e)=>{ if(e.target===lightbox) closeGift(); });
-
-  hotspots.addEventListener('click', (e)=>{
-    const el=e.target.closest('.giftHotspot');
-    if(!el) return;
-    const giftId=el.dataset.gift;
-    const rect=el.getBoundingClientRect();
-    spawnBurst(rect.left+rect.width/2, rect.top+rect.height/2);
-    openGift(giftId);
-  });
-
-  // ========= Render =========
-  function drawBackground(t){
-    const bg=ctx.createLinearGradient(0,0,0,H);
-    bg.addColorStop(0,"#050814");
-    bg.addColorStop(1,"#0a1436");
-    ctx.fillStyle=bg;
-    ctx.fillRect(0,0,W,H);
-
-    // nhẹ glow nền (không phải vòng orbit)
-    ctx.globalCompositeOperation="lighter";
-    for(let i=0;i<3;i++){
-      const rx=W*(0.25+i*0.25)+Math.sin(t*0.35+i)*70;
-      const ry=H*(0.22+(i%2)*0.12);
-      const rad=W*(0.26+(i%2)*0.07);
-      const gg=ctx.createRadialGradient(rx,ry,0,rx,ry,rad);
-      gg.addColorStop(0,`rgba(125,249,255,${0.05+0.02*Math.sin(t+i)})`);
-      gg.addColorStop(1,"rgba(0,0,0,0)");
-      ctx.fillStyle=gg;
-      ctx.beginPath(); ctx.arc(rx,ry,rad,0,Math.PI*2); ctx.fill();
-    }
-    ctx.globalCompositeOperation="source-over";
-
-    ctx.fillStyle="rgba(0,0,0,0.10)";
-    ctx.fillRect(0,0,W,H);
-  }
-
-  let last=performance.now();
-  let rot=0;
-
-  function frame(now){
-    const dt=Math.min(40, now-last); last=now;
-    const t=now*0.001;
-
-    // ✅ Tốc độ xoay CHẬM lại ở đây
-    rot += dt * 0.00018;  // nhỏ hơn nữa thì giảm 0.00018 -> 0.00012
-
-    drawBackground(t);
-
-    // snow
-    ctx.globalAlpha=0.92;
-    for(const s of snow){
-      s.w += 0.01 + s.r*0.002;
-      s.y += s.v;
-      s.x += s.s + Math.sin(s.w)*0.35;
-      if(s.y>H+10){ s s.y=-10; s.x=rand(0,W); }
-      if(s.x<-10) s.x=W+10;
-      if(s.x>W+10) s.x=-10;
-      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-      ctx.fillStyle=`rgba(255,255,255,${s.a})`;
-      ctx.fill();
-    }
-    ctx.globalAlpha=1;
-
-    // fireflies
-    ctx.globalCompositeOperation="lighter";
-    for(const f of fireflies){
-      f.phase += 0.012;
-      f.x += f.vx + Math.sin(f.phase)*0.12;
-      f.y += f.vy + Math.cos(f.phase)*0.10;
-      if(f.x < W*0.10 || f.x > W*0.90) f.vx*=-1;
-      if(f.y < H*0.08 || f.y > H*0.92) f.vy*=-1;
-      const a=0.14+0.22*(0.5+0.5*Math.sin(f.phase*1.6));
-      ctx.globalAlpha=a;
-      ctx.fillStyle="rgba(255,239,154,0.9)";
-      ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,Math.PI*2); ctx.fill();
-      ctx.globalAlpha=a*0.35;
-      ctx.beginPath(); ctx.arc(f.x,f.y,f.r*6.0,0,Math.PI*2); ctx.fill();
-    }
-    ctx.globalAlpha=1;
-    ctx.globalCompositeOperation="source-over";
-
-    const cx=W*0.5, cy=H*0.56;
-    const scale=Math.min(W,H);
-
-    // base glow dưới gốc cây
-    const baseY = cy + scale*0.28;
-    ctx.globalCompositeOperation="lighter";
-    const base=ctx.createRadialGradient(cx,baseY,0,cx,baseY,scale*0.42);
-    base.addColorStop(0,`rgba(255,239,154,${0.10+0.03*Math.sin(t*1.1)})`);
-    base.addColorStop(0.40,"rgba(125,249,255,0.06)");
-    base.addColorStop(1,"rgba(0,0,0,0)");
-    ctx.fillStyle=base;
-    ctx.beginPath(); ctx.arc(cx,baseY,scale*0.42,0,Math.PI*2); ctx.fill();
-    ctx.globalCompositeOperation="source-over";
-
-    // ===== Draw TREE PNG rotated (center) =====
-    if(treeImg.complete && treeImg.naturalWidth>0){
-      // kích thước cây: tự căn theo màn hình
-      const targetH = Math.min(H*0.88, W*1.05);
-      const ratio = treeImg.naturalWidth / treeImg.naturalHeight;
-      const targetW = targetH * ratio;
-
-      // vị trí cây (giữa màn hình, hơi thấp để thấy gốc)
-      const treeX = cx;
-      const treeY = cy + H*0.06;
-
-      ctx.save();
-      ctx.translate(treeX, treeY);
-      ctx.rotate(rot);         // ✅ xoay chậm
-      ctx.imageSmoothingEnabled = true;
-      ctx.drawImage(treeImg, -targetW/2, -targetH/2, targetW, targetH);
-      ctx.restore();
-    }
-
-    // bursts
-    ctx.globalCompositeOperation="lighter";
-    for(let i=bursts.length-1;i>=0;i--){
-      const b=bursts[i];
-      b.life-=1;
-      b.x+=b.vx; b.y+=b.vy;
-      b.vx*=0.985; b.vy*=0.985;
-      b.vy+=0.02;
-      const aa=Math.max(0,b.life/90);
-      ctx.globalAlpha=aa;
-      ctx.fillStyle=b.c;
-      ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill();
-      if(b.life<=0) bursts.splice(i,1);
-    }
-    ctx.globalAlpha=1;
-    ctx.globalCompositeOperation="source-over";
-
-    // align gift hotspots dưới gốc cây
-    const hsScale = Math.min(W,H)*0.65;
-    for(let i=0;i<giftHotspots.length;i++){
-      const g=giftHotspots[i];
-      const el=hsEls[i];
-      el.style.left = (cx + g.x*hsScale) + "px";
-      el.style.top  = (baseY + g.y*hsScale - hsScale*0.55) + "px";
-    }
-
-    requestAnimationFrame(frame);
-  }
-
-  requestAnimationFrame(frame);
-
-})();
-</script>
+  <script src="script.js"></script>
 </body>
 </html>
