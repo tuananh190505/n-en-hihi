@@ -14,10 +14,10 @@ function resize() {
 window.addEventListener("resize", resize);
 resize();
 
+function rand(min, max){ return Math.random() * (max - min) + min; }
+
 const flakes = [];
 const FLAKE_COUNT = Math.min(220, Math.floor((window.innerWidth * window.innerHeight) / 9000));
-
-function rand(min, max){ return Math.random() * (max - min) + min; }
 
 for (let i = 0; i < FLAKE_COUNT; i++) {
   flakes.push({
@@ -42,10 +42,7 @@ function drawSnow() {
     f.x += f.vx;
     f.y += f.vy;
 
-    if (f.y > h + 10) {
-      f.y = -10;
-      f.x = rand(0, w);
-    }
+    if (f.y > h + 10) { f.y = -10; f.x = rand(0, w); }
     if (f.x > w + 10) f.x = -10;
     if (f.x < -10) f.x = w + 10;
   }
@@ -55,10 +52,9 @@ function drawSnow() {
 drawSnow();
 
 
-// ====== NHẠC NỀN (tự phát nếu được, không được thì bấm nút/nhấn quà sẽ phát) ======
+// ====== NHẠC NỀN ======
 const bgm = document.getElementById("bgm");
 const musicBtn = document.getElementById("musicBtn");
-
 let musicOn = false;
 
 async function tryPlayMusic() {
@@ -74,21 +70,22 @@ async function tryPlayMusic() {
 }
 
 musicBtn.addEventListener("click", async () => {
-  if (!musicOn) {
-    await tryPlayMusic();
-  } else {
+  if (!musicOn) await tryPlayMusic();
+  else {
     bgm.pause();
     musicOn = false;
     musicBtn.textContent = "🔈 Bật nhạc";
   }
 });
 
+// thử autoplay khi load (có thể bị chặn)
 window.addEventListener("load", () => {
   tryPlayMusic();
 });
 
 
 // ====== ALBUM ẢNH (BẤM HỘP QUÀ) ======
+// Sửa đúng tên ảnh của bạn:
 const galleryImages = [
   "assets/gallery/1.jpg",
   "assets/gallery/2.jpg",
@@ -151,7 +148,7 @@ function openModal() {
   modal.classList.add("isOpen");
   modal.setAttribute("aria-hidden", "false");
 
-  // nhấn quà cũng là 1 tương tác => chắc chắn phát được nhạc nếu trước đó bị chặn
+  // nhấn quà là tương tác => phát nhạc nếu trước đó bị chặn
   if (!musicOn) tryPlayMusic();
 
   buildThumbs();
@@ -166,14 +163,17 @@ function closeModal() {
 giftBtn.addEventListener("click", openModal);
 closeModalBtn.addEventListener("click", closeModal);
 
+// bấm ra ngoài để đóng
 modal.addEventListener("click", (e) => {
   const isBackdrop = e.target && e.target.dataset && e.target.dataset.close === "1";
   if (isBackdrop) closeModal();
 });
 
+// prev/next
 prevBtn.addEventListener("click", () => showImage(currentIndex - 1));
 nextBtn.addEventListener("click", () => showImage(currentIndex + 1));
 
+// phím tắt
 window.addEventListener("keydown", (e) => {
   if (!modal.classList.contains("isOpen")) return;
   if (e.key === "Escape") closeModal();
