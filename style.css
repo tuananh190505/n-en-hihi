@@ -18,7 +18,7 @@ body{
   overflow-x:hidden;
 }
 
-/* Canvas tuyết */
+/* tuyết */
 #snow{
   position:fixed;
   inset:0;
@@ -28,7 +28,7 @@ body{
   pointer-events:none;
 }
 
-/* Top bar */
+/* top bar */
 .topbar{
   position:fixed;
   top:14px;
@@ -46,10 +46,8 @@ body{
   backdrop-filter: blur(10px);
   z-index:5;
 }
-.brand{
-  font-weight:700;
-  letter-spacing:.2px;
-}
+.brand{ font-weight:700; letter-spacing:.2px; }
+
 .btn{
   cursor:pointer;
   border: 1px solid var(--border);
@@ -59,211 +57,4 @@ body{
   border-radius: 12px;
   transition: transform .15s ease, background .15s ease;
 }
-.btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.14); }
-.btn:active{ transform: translateY(0px); }
-
-/* Khu vực hiển thị */
-.stage{
-  position:relative;
-  min-height: 100vh;
-  display:grid;
-  place-items:center;
-  padding: 90px 16px 40px;
-  z-index:1;
-}
-
-.scene{
-  position:relative;
-  width:min(820px, 94vw);
-  height: calc(100vh - 140px);     /* luôn vừa màn hình */
-  max-height: 860px;
-  display:grid;
-  place-items:center;
-}
-
-/* Wrapper để tạo hiệu ứng quay quanh trục (3D) */
-.treeWrap{
-  position:relative;
-  width: 100%;
-  height: 100%;
-  display:grid;
-  place-items:center;
-  perspective: 900px;              /* tạo chiều sâu */
-}
-
-/* Cây thông: tự co giãn theo chiều cao màn hình */
-.tree{
-  height: min(78vh, 760px);        /* CHÌA KHÓA: không bị quá to */
-  width: auto;
-  max-width: 92vw;
-  object-fit: contain;
-  filter: drop-shadow(0 30px 60px rgba(0,0,0,.35));
-  transform-origin: 50% 55%;
-}
-
-/* Quay quanh "nó" (y-axis) + hơi nghiêng cho đẹp */
-.spin3d{
-  animation: spin3d 22s linear infinite;
-  will-change: transform;
-}
-@keyframes spin3d{
-  0%   { transform: rotateY(0deg) rotateX(4deg); }
-  100% { transform: rotateY(360deg) rotateX(4deg); }
-}
-
-/* Hộp quà đặt dưới cây, luôn nằm gần đáy vùng scene */
-.gift{
-  position:absolute;
-  bottom: 2%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: clamp(120px, 16vw, 170px);
-  height: clamp(120px, 16vw, 170px);
-  border:none;
-  background: transparent;
-  cursor:pointer;
-  z-index:3;
-  filter: drop-shadow(0 18px 28px rgba(0,0,0,.45));
-  animation: float 2.6s ease-in-out infinite;
-}
-@keyframes float{
-  0%,100%{ transform: translateX(-50%) translateY(0px); }
-  50%{ transform: translateX(-50%) translateY(-6px); }
-}
-
-.gift__tag{
-  position:absolute;
-  top:-34px;
-  left:50%;
-  transform:translateX(-50%);
-  font-size: 13px;
-  color: var(--muted);
-  background: rgba(0,0,0,.25);
-  border:1px solid rgba(255,255,255,.12);
-  padding: 6px 10px;
-  border-radius: 999px;
-  backdrop-filter: blur(8px);
-}
-.gift__svg{ width:100%; height:100%; }
-
-/* Modal */
-.modal{
-  position:fixed;
-  inset:0;
-  display:none;
-  z-index:10;
-}
-.modal.isOpen{ display:block; }
-
-.modal__backdrop{
-  position:absolute;
-  inset:0;
-  background: rgba(0,0,0,.55);
-}
-
-.modal__panel{
-  position:absolute;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  width:min(980px, calc(100% - 24px));
-  background: rgba(20,24,45,.88);
-  border:1px solid rgba(255,255,255,.12);
-  border-radius: 18px;
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(10px);
-  overflow:hidden;
-}
-
-.modal__header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding: 14px 14px;
-  border-bottom:1px solid rgba(255,255,255,.10);
-}
-.modal__title{ font-weight:800; }
-
-.modal__body{ padding: 14px; }
-
-.viewer{
-  position:relative;
-  background: rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.10);
-  border-radius: 16px;
-  overflow:hidden;
-  display:grid;
-  place-items:center;
-  min-height: 420px;
-}
-.viewer__img{
-  max-width: 100%;
-  max-height: 70vh;
-  object-fit: contain;
-  transform: scale(1);
-  transition: transform .18s ease;
-}
-.viewer__img:hover{ transform: scale(1.02); }
-
-.nav{
-  position:absolute;
-  top:50%;
-  transform:translateY(-50%);
-  width: 42px;
-  height: 42px;
-  border-radius: 999px;
-  border:1px solid rgba(255,255,255,.16);
-  background: rgba(0,0,0,.22);
-  color: var(--text);
-  cursor:pointer;
-  font-size: 26px;
-  display:grid;
-  place-items:center;
-}
-#prevBtn{ left: 10px; }
-#nextBtn{ right: 10px; }
-
-.thumbs{
-  margin-top: 12px;
-  display:flex;
-  gap: 10px;
-  overflow:auto;
-  padding-bottom: 6px;
-}
-.thumb{
-  width: 96px;
-  height: 68px;
-  border-radius: 12px;
-  border: 2px solid transparent;
-  overflow:hidden;
-  flex: 0 0 auto;
-  cursor:pointer;
-  background: rgba(255,255,255,.06);
-}
-.thumb img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-.thumb.isActive{
-  border-color: rgba(246,196,83,.9);
-}
-
-.emptyNote{
-  display:none;
-  margin-top: 10px;
-  color: rgba(255,255,255,.75);
-  font-size: 14px;
-}
-.emptyNote code{
-  background: rgba(0,0,0,.25);
-  padding: 2px 6px;
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,.12);
-}
-
-/* Mobile tối ưu thêm */
-@media (max-width: 480px){
-  .tree{ height: 70vh; }
-  .viewer{ min-height: 320px; }
-}
+.btn
