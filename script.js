@@ -15,7 +15,7 @@ window.addEventListener("resize", resize);
 resize();
 
 const flakes = [];
-const FLAKE_COUNT = 160;
+const FLAKE_COUNT = Math.min(220, Math.floor((window.innerWidth * window.innerHeight) / 9000));
 
 function rand(min, max){ return Math.random() * (max - min) + min; }
 
@@ -24,8 +24,8 @@ for (let i = 0; i < FLAKE_COUNT; i++) {
     x: rand(0, w),
     y: rand(0, h),
     r: rand(0.8, 3.2),
-    vx: rand(-0.4, 0.4),
-    vy: rand(0.8, 2.2),
+    vx: rand(-0.35, 0.35),
+    vy: rand(0.9, 2.4),
     a: rand(0.35, 0.95),
   });
 }
@@ -55,20 +55,19 @@ function drawSnow() {
 drawSnow();
 
 
-// ====== NHẠC NỀN ======
+// ====== NHẠC NỀN (tự phát nếu được, không được thì bấm nút/nhấn quà sẽ phát) ======
 const bgm = document.getElementById("bgm");
 const musicBtn = document.getElementById("musicBtn");
 
 let musicOn = false;
 
-// Trình duyệt thường CHẶN autoplay có tiếng.
-// Ta sẽ thử play, nếu fail thì yêu cầu người dùng bấm nút.
 async function tryPlayMusic() {
   try {
+    bgm.volume = 0.6;
     await bgm.play();
     musicOn = true;
     musicBtn.textContent = "🔊 Tắt nhạc";
-  } catch (e) {
+  } catch {
     musicOn = false;
     musicBtn.textContent = "🔈 Bật nhạc";
   }
@@ -84,14 +83,12 @@ musicBtn.addEventListener("click", async () => {
   }
 });
 
-// Tự thử phát nhạc khi load trang
 window.addEventListener("load", () => {
   tryPlayMusic();
 });
 
 
 // ====== ALBUM ẢNH (BẤM HỘP QUÀ) ======
-// Bạn thay danh sách này bằng ảnh bạn muốn hiển thị:
 const galleryImages = [
   "assets/gallery/1.jpg",
   "assets/gallery/2.jpg",
@@ -110,39 +107,14 @@ const nextBtn = document.getElementById("nextBtn");
 
 let currentIndex = 0;
 
-function openModal() {
-  modal.classList.add("isOpen");
-  modal.setAttribute("aria-hidden", "false");
-
-  // nếu nhạc chưa bật, bấm quà cũng là 1 tương tác => có thể phát nhạc
-  if (!musicOn) tryPlayMusic();
-
-  buildThumbs();
-  showImage(0);
-}
-
-function closeModal() {
-  modal.classList.remove("isOpen");
-  modal.setAttribute("aria-hidden", "true");
-}
-
-function showImage(index) {
-  currentIndex = (index + galleryImages.length) % galleryImages.length;
-  viewerImg.src = galleryImages[currentIndex];
-
-  [...thumbs.children].forEach((el, i) => {
-    el.classList.toggle("isActive", i === currentIndex);
-  });
-}
-
 function buildThumbs() {
   thumbs.innerHTML = "";
+  emptyNote.style.display = "none";
 
   if (!galleryImages || galleryImages.length === 0) {
     emptyNote.style.display = "block";
     return;
   }
-  emptyNote.style.display = "none";
 
   galleryImages.forEach((src, i) => {
     const t = document.createElement("button");
@@ -154,7 +126,6 @@ function buildThumbs() {
     img.src = src;
     img.alt = `Ảnh ${i + 1}`;
 
-    // nếu ảnh lỗi (chưa upload), ẩn thumbnail đó để khỏi rối
     img.addEventListener("error", () => {
       t.remove();
       if (thumbs.children.length === 0) emptyNote.style.display = "block";
@@ -163,22 +134,46 @@ function buildThumbs() {
     t.appendChild(img);
     thumbs.appendChild(t);
   });
+
+  if (thumbs.children.length === 0) emptyNote.style.display = "block";
+}
+
+function showImage(index) {
+  currentIndex = (index + galleryImages.length) % galleryImages.length;
+  viewerImg.src = galleryImages[currentIndex];
+
+  [...thumbs.children].forEach((el, i) => {
+    el.classList.toggle("isActive", i === currentIndex);
+  });
+}
+
+function openModal() {
+  modal.classList.add("isOpen");
+  modal.setAttribute("aria-hidden", "false");
+
+  // nhấn quà cũng là 1 tương tác => chắc chắn phát được nhạc nếu trước đó bị chặn
+  if (!musicOn) tryPlayMusic();
+
+  buildThumbs();
+  showImage(0);
+}
+
+function closeModal() {
+  modal.classList.remove("isOpen");
+  modal.setAttribute("aria-hidden", "true");
 }
 
 giftBtn.addEventListener("click", openModal);
 closeModalBtn.addEventListener("click", closeModal);
 
-// bấm ra ngoài để đóng
 modal.addEventListener("click", (e) => {
   const isBackdrop = e.target && e.target.dataset && e.target.dataset.close === "1";
   if (isBackdrop) closeModal();
 });
 
-// nút prev/next
 prevBtn.addEventListener("click", () => showImage(currentIndex - 1));
 nextBtn.addEventListener("click", () => showImage(currentIndex + 1));
 
-// phím tắt
 window.addEventListener("keydown", (e) => {
   if (!modal.classList.contains("isOpen")) return;
   if (e.key === "Escape") closeModal();
